@@ -77,6 +77,9 @@ def importFplMaterial(material, outInt=15, filterWidth=11):
                 #print(d)
                 #print(data_processed['peakHRRPUA'])
                 #assert False, "Stopped"
+            elif ('Specific Ext Area' in d):
+                data_processed['SEA'] = [float(x) for x in d.split(' ') if checkForFloat(x)][0]
+                data_processed['SootYield'] = data_processed['SEA']/8700
             elif type(d2) == str:
                 d3 = data.values[j+2:, :2]
                 delta = abs(d3[1:, 1] - d3[:-1, 1])
@@ -119,6 +122,7 @@ def importFplMaterial(material, outInt=15, filterWidth=11):
         avg180s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 180s average'].values)
         avg300s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 300s average'].values)
         avgHoC = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HeatOfCombustion'].values)
+        sootYield = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'SootYield'].values)
         
         times = coneData.loc[coneData['flux'] == flux, 'time'].values
         hrrpuas = coneData.loc[coneData['flux'] == flux, 'hrrpua'].values
@@ -217,6 +221,7 @@ def importFplMaterial(material, outInt=15, filterWidth=11):
         material_dict[flux]['avg300s'] = avg300s
         material_dict[flux]['thickness'] = thickness
         material_dict[flux]['HeatOfCombustion'] = avgHoC
+        material_dict[flux]['SootYield'] = sootYield
         material_dict[flux]['hrrpuas_interp'] = hrrpuas_interp
         material_dict[flux]['hrrpuas_interp_notign'] = hrrpuas_interp_notign
         material_dict[flux]['time_interp'] = time
@@ -255,7 +260,7 @@ def checkForFloat(string):
         return False
 
 if __name__ == "__main__":
-    data_dir ="..\\data\\fpl_materials\\"
+    data_dir ="../data/fpl_materials/"
     material_database = importFplDatabase(data_dir, 15)
     
     import matplotlib.pyplot as plt
@@ -268,7 +273,7 @@ if __name__ == "__main__":
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
-    txt = txt + 'CharFraction,HeatOfCombustion,'
+    txt = txt + 'CharFraction,HeatOfCombustion,SootYield,'
     txt = txt + 'IgnitionTemperature,IgnitionTemperatureBasis,HeaderRows,FYI'
     for material in list(material_database.keys()):
         conductivity = 0.4 #material_database[material]['conductivity']
@@ -278,6 +283,7 @@ if __name__ == "__main__":
         initial_mass = material_database[material][50.0]['initial_mass']
         final_mass = material_database[material][50.0]['final_mass']
         heat_of_combustion = material_database[material][50.0]['HeatOfCombustion']
+        soot_yield = material_database[material][50.0]['SootYield']
         matClass = material_database[material]['materialClass']
         
         fluxes = list(material_database[material].keys())
@@ -308,7 +314,7 @@ if __name__ == "__main__":
         #txt = txt + '%s-25.csv-HRRPUA|%s-50.csv-HRRPUA|%s-75.csv-HRRPUA,'%(mat, mat, mat)
         #txt = txt + '25|50|75,'
         txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,%0.8f,'%(density, conductivity, specific_heat, emissivity, thickness)
-        txt = txt + '%0.4f,%0.4f,'%(max([final_mass/initial_mass,0]), heat_of_combustion)
+        txt = txt + '%0.4f,%0.4f,%0.8f,'%(max([final_mass/initial_mass,0]), heat_of_combustion, soot_yield)
         txt = txt + 'Calculate,'
         for flux in fluxes:
             txt = txt + '%02d|'%(flux)
@@ -328,8 +334,8 @@ if __name__ == "__main__":
             #out_hrrpuas[out_times < tign] = 0
             d = pd.DataFrame(np.array([out_times, out_hrrpuas]).T, columns=['Time','HRRPUA'])
             #dataFile = os.path.abspath('fpl_materials//%s-%02d.csv'%(mat, flux))
-            dataFile = os.path.abspath('..\\data\\fpl_materials_processed\\%s-%02d.csv'%(mat, flux))
+            dataFile = os.path.abspath('../data/fpl_materials_processed/%s-%02d.csv'%(mat, flux))
             d.to_csv(dataFile, index=False)
             
-    with open('..\\data\\fpl_spec_file.csv', 'w') as f:
+    with open('../data/fpl_spec_file.csv', 'w') as f:
         f.write(txt)
