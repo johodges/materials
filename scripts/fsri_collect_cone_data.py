@@ -144,8 +144,13 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 data_temp_df['SPR'][data_temp_df['SPR'] < 0] = 0
                 data_temp_df['SEA'] = (1000*data_temp_df.loc[:,'Volumetric Flow']*data_temp_df.loc[:,'Extinction Coefficient'])/data_temp_df['MLR']
                 # data_temp_df['SEA'][np.isinf(data_temp_df['SEA'])] = np.nan
+                data_temp_df['Soot Mass Concentration'] = data_temp_df['Extinction Coefficient']/avg_ext_coeff # kg/m3
+                data_temp_df['Soot Mass Fraction'] = data_temp_df['Soot Mass Concentration']/air_density(data_temp_df['Smoke TC']) # kg/kg
+                data_temp_df['Soot Mass Flow'] = data_temp_df['Soot Mass Fraction']*data_temp_df['EDF'] # kg/s
+                data_temp_df['Soot Yield'] = data_temp_df['Soot Mass Flow']/data_temp_df['MLR'] # kg/kg
+                data_temp_df['Soot Yield'][data_temp_df['Soot Yield'] < 0] = 0
 
-                df_dict[label] = data_temp_df[['Time', 'HRRPUA', 'MLR', 'EHC', 'SPR', 'SEA', 'Extinction Coefficient']].copy()
+                df_dict[label] = data_temp_df[['Time', 'HRRPUA', 'MLR', 'EHC', 'SPR', 'SEA', 'Extinction Coefficient', 'Soot Yield']].copy()
                 df_dict[label].set_index(df_dict[label].loc[:,'Time'], inplace = True)
                 df_dict[label] = df_dict[label][df_dict[label].index.notnull()]
                 df_dict[label].drop('Time', axis = 1, inplace = True)
@@ -183,6 +188,8 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 t90 = data_temp_df['Sample Mass'].sub(data_temp_df.at['1','Sample Mass'] - 0.9*total_mass_lost).abs().idxmin()
 
                 output_df.at['Avg. Mass Loss Rate [10% to 90%] (g/m2s)', label] = float("{:.2f}".format(np.mean(data_temp_df.loc[t10:t90,'MLR']/surf_area_m2)))
+                output_df.at['Avg. Soot Yield [10% to 90%] (g/g)', label] = float("{:.8f}".format(np.mean(data_temp_df.loc[t10:t90,'Soot Yield'])))
+                
                 save_dir2 = f'{save_dir}/{material}/'
                 if not os.path.exists(save_dir2): os.makedirs(save_dir2)
                 fname = 'cone_%s.csv'%(label)
@@ -194,10 +201,11 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 tign = float(scalar_data_series['TIME TO IGN'])
                 time = data_temp_df.loc[tmp, 'Time'].values
                 hrrpua = data_temp_df.loc[tmp, 'HRRPUA'].values
+                ysoot = data_temp_df.loc[tmp, 'Soot Yield'].values
                 hrrpua[time < tign] = 0
                 hrrpua[hrrpua < 0] = 0
                 hrrpua[np.isnan(hrrpua)] = 0
-                timeResolvedOutput = pd.DataFrame(np.array([time, hrrpua]).T, columns=['Time','HRRPUA'])
+                timeResolvedOutput = pd.DataFrame(np.array([time, hrrpua,ysoot]).T, columns=['Time','HRRPUA','Y_SOOT'])
                 timeResolvedOutput.to_csv(os.path.join(save_dir2, fname), index=False)
                 src = os.path.abspath(f.replace('Scan','Scalar'))
                 basename = os.path.basename(src).split("_HF")[1]
