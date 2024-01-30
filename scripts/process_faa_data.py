@@ -17,13 +17,14 @@ def getMaterial(material, style='md_lmhf'):
     fluxes = style.split('_')[1]
     
     if material == 'PC':
-        referenceCurve = "..\\data\\faa_polymers\\PC.csv"
+        referenceCurve = "../data/faa_polymers/PC.csv"
         density = 1180.0
         conductivity = 0.22 
         specific_heat = 1.9
         heat_of_combustion = 25.6
         emissivity = 0.9
         nu_char = 0.21
+        soot_yield = 0.112 # SFPE Handbook 5th edition page 3467
         data = pd.read_csv(referenceCurve)
         cases = {
                  '3-75': {'Time' : 'Time_3_75', 'HRR' : 'HRR_3_75', 'delta' : 3, 'cone' : 75},
@@ -47,13 +48,14 @@ def getMaterial(material, style='md_lmhf'):
         if ('h' in fluxes) and ('h' in thicknesses): pass
     
     elif material == 'PVC':
-        referenceCurve = "..\\data\\faa_polymers\\PVC.csv"
+        referenceCurve = "../data/faa_polymers/PVC.csv"
         density = 1430.0
         conductivity = 0.17 
         specific_heat = 1.55
         heat_of_combustion = 36.5
         emissivity = 0.9
         nu_char = 0.21
+        soot_yield = 0.172 # SFPE Handbook 5th edition page 3468
         data = pd.read_csv(referenceCurve)
         cases = {
                  '3-75': {'Time' : 'Time_3_75', 'HRR' : 'HRR_3_75', 'delta' : 3, 'cone' : 75},
@@ -75,13 +77,14 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('9-75')
         if ('h' in fluxes) and ('h' in thicknesses): pass
     elif material == 'PMMA':
-        referenceCurve = "..\\data\\faa_polymers\\pmma.csv"
+        referenceCurve = "../data/faa_polymers/pmma.csv"
         density = 1100
         conductivity = 0.20
         specific_heat = 2.2
         heat_of_combustion = 33.5 #24.450
         emissivity = 0.85
         nu_char = 0.0
+        soot_yield = 0.022 # SFPE Handbook 5th edition page 3467
         data = pd.read_csv(referenceCurve)
         cases = {
                  '3-25': {'Time' : 'Time_3_25', 'HRR' : 'HRR_3_25', 'delta' : 3.2, 'cone' : 25},
@@ -105,13 +108,14 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HIPS':
-        referenceCurve = "..\\data\\faa_polymers\\hips.csv"
+        referenceCurve = "../data/faa_polymers/hips.csv"
         density = 950
         conductivity = 0.22
         specific_heat = 2.0
         heat_of_combustion = 39.2 #38.1
         emissivity = 0.86
         nu_char = 0.0
+        soot_yield = 0.164 # SFPE Handbook 5th edition page 3467 for polystyrene
         data = pd.read_csv(referenceCurve)
         cases = {
                  '3-25': {'Time' : 'Time_3_25', 'HRR' : 'HRR_3_25', 'delta' : 3.2, 'cone' : 25},
@@ -135,13 +139,14 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HDPE':
-        referenceCurve = "..\\data\\faa_polymers\\hdpe.csv"
+        referenceCurve = "../data/faa_polymers/hdpe.csv"
         density = 860
         conductivity = 0.29
         specific_heat = 3.5
         heat_of_combustion = 47.5 #43.5
         emissivity = 0.92
         nu_char = 0.0
+        soot_yield = 0.060 # SFPE Handbook 5th edition page 3467 for polyethylene
         data = pd.read_csv(referenceCurve)
         cases = {
                  '3-25': {'Time' : 'Time_3_25', 'HRR' : 'HRR_3_25', 'delta' : 3.2, 'cone' : 25},
@@ -166,7 +171,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     for c in list(cases.keys()):
         cases[c]['File'] = referenceCurve
-    return density, conductivity, specific_heat, heat_of_combustion, emissivity, nu_char, data, cases, case_basis
+    return density, conductivity, specific_heat, heat_of_combustion, soot_yield, emissivity, nu_char, data, cases, case_basis
 
 def getPlotLimits(material):
     if material == 'PVC':
@@ -187,7 +192,7 @@ def getPlotLimits(material):
     return xlim, ylim
 
 def processCaseData_old(material, style='md_lmhf', save_csv=False):
-    density, conductivity, specific_heat, HoC, emissivity, nu_char, data, cases, case_basis = getMaterial(material, style=style)
+    density, conductivity, specific_heat, HoC, ys, emissivity, nu_char, data, cases, case_basis = getMaterial(material, style=style)
     
     for i, c in enumerate(list(cases.keys())):
         times = data[cases[c]['Time']]
@@ -246,7 +251,7 @@ if __name__ == "__main__":
     
     # Initialize variables
     for material in materials:
-        density, conductivity, specific_heat, heat_of_combustion, emissivity, nu_char, _, _, case_basis = getMaterial(material, style=style)
+        density, conductivity, specific_heat, heat_of_combustion, soot_yield, emissivity, nu_char, _, _, case_basis = getMaterial(material, style=style)
         cases, case_basis = processCaseData_old(material, style=style)
         
         thickness = cases[case_basis[0]]['delta']
@@ -298,7 +303,7 @@ if __name__ == "__main__":
         txt = txt + timeFiles[:-1] + ',' + hrrFiles[:-1] + ',' + flux_txt[:-1] + ','
         txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,'%(density, conductivity, specific_heat, emissivity)
         txt = txt + thickness_txt[:-1] + ','
-        txt = txt + '%0.4f,%0.4f,'%(nu_char, heat_of_combustion)
+        txt = txt + '%0.4f,%0.4f,%0.8f,'%(nu_char, heat_of_combustion, soot_yield)
         txt = txt + 'Calculate,' + flux_txt[:-1] +',1,FAA_materials'
         
     with open('../data/faa_spec_file.csv', 'w') as f:
