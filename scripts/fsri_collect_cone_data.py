@@ -136,19 +136,19 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 data_temp_df['THR'] = 0.25*data_temp_df['HRRPUA'].cumsum()/1000
                 data_temp_df['MLR_grad'] = -np.gradient(data_temp_df['Sample Mass'], 0.25)
                 data_temp_df['MLR'] = apply_savgol_filter(data_temp_df['MLR_grad'])
-                data_temp_df['MLR'][data_temp_df['MLR'] > 5] = 0
+                data_temp_df.loc[data_temp_df['MLR'] > 5, 'MLR'] = 0
 
                 data_temp_df['EHC'] = data_temp_df['HRR']/data_temp_df['MLR'] # kW/(g/s) -> MJ/kg
                 data_temp_df['Extinction Coefficient'] = data_temp_df['Ext Coeff'] - data_temp_df.at['Baseline','Ext Coeff']
                 data_temp_df['SPR'] = (data_temp_df.loc[:,'Extinction Coefficient'] * data_temp_df.loc[:,'Volumetric Flow'])/surf_area_m2
-                data_temp_df['SPR'][data_temp_df['SPR'] < 0] = 0
+                data_temp_df.loc[data_temp_df['SPR'] < 0, 'SPR'] = 0
                 data_temp_df['SEA'] = (1000*data_temp_df.loc[:,'Volumetric Flow']*data_temp_df.loc[:,'Extinction Coefficient'])/data_temp_df['MLR']
                 # data_temp_df['SEA'][np.isinf(data_temp_df['SEA'])] = np.nan
                 data_temp_df['Soot Mass Concentration'] = data_temp_df['Extinction Coefficient']/avg_ext_coeff # kg/m3
                 data_temp_df['Soot Mass Fraction'] = data_temp_df['Soot Mass Concentration']/air_density(data_temp_df['Smoke TC']) # kg/kg
                 data_temp_df['Soot Mass Flow'] = data_temp_df['Soot Mass Fraction']*data_temp_df['EDF'] # kg/s
                 data_temp_df['Soot Yield'] = data_temp_df['Soot Mass Flow']/data_temp_df['MLR'] # kg/kg
-                data_temp_df['Soot Yield'][data_temp_df['Soot Yield'] < 0] = 0
+                data_temp_df.loc[data_temp_df['Soot Yield'] < 0,'Soot Yield'] = 0
 
                 df_dict[label] = data_temp_df[['Time', 'HRRPUA', 'MLR', 'EHC', 'SPR', 'SEA', 'Extinction Coefficient', 'Soot Yield']].copy()
                 df_dict[label].set_index(df_dict[label].loc[:,'Time'], inplace = True)
