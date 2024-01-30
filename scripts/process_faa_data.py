@@ -235,7 +235,7 @@ if __name__ == "__main__":
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
-    txt = txt + 'CharFraction,HeatOfCombustion,'
+    txt = txt + 'CharFraction,HeatOfCombustion,SootYield,'
     txt = txt + 'IgnitionTemperature,IgnitionTemperatureBasis,HeaderRows,FYI'
     
     # Get fixed parameters
