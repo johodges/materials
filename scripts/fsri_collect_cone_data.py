@@ -23,6 +23,7 @@ import math
 from scipy.signal import savgol_filter
 import git
 import shutil
+import scipy.integrate
 
 # Define variables #
 data_dir = '../data/fsri_materials_database/01_Data/'
@@ -147,10 +148,49 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 data_temp_df['Soot Mass Concentration'] = data_temp_df['Extinction Coefficient']/avg_ext_coeff # kg/m3
                 data_temp_df['Soot Mass Fraction'] = data_temp_df['Soot Mass Concentration']/air_density(data_temp_df['Smoke TC']) # kg/kg
                 data_temp_df['Soot Mass Flow'] = data_temp_df['Soot Mass Fraction']*data_temp_df['EDF'] # kg/s
-                data_temp_df['Soot Yield'] = data_temp_df['Soot Mass Flow']/data_temp_df['MLR'] # kg/kg
-                data_temp_df.loc[data_temp_df['Soot Yield'] < 0,'Soot Yield'] = 0
+                #data_temp_df['Soot Yield'] = data_temp_df['Soot Mass Flow']/data_temp_df['MLR'] # kg/kg
+                
+                # Determine intervals for yield integrals
 
-                df_dict[label] = data_temp_df[['Time', 'HRRPUA', 'MLR', 'EHC', 'SPR', 'SEA', 'Extinction Coefficient', 'Soot Yield']].copy()
+                ign_time = float(scalar_data_series.at['TIME TO IGN'])
+                end_time = float(scalar_data_series.at['END OF TEST TIME'])
+                ign_ind = str(int(4 * ign_time + 1))
+                end_ind = str(int(4 * end_time + 1))
+                ign_mass = float(data_temp_df.loc[ign_ind,'Sample Mass'])
+                end_mass = float(data_temp_df.loc[str(end_ind),'Sample Mass'])
+
+                if float(data_temp_df.loc[str(1),'Sample Mass']) - float(data_temp_df.loc[end_ind,'Sample Mass']) > float(scalar_data_series['SPECIMEN MASS']):
+                    try:
+                        sample_mass_inc = data_temp_df.loc[str(2):end_ind,'Sample Mass'].diff().abs() > 1
+                        mass_discont_list = sample_mass_inc.index[sample_mass_inc == True].tolist()
+                        mass_discont_list_test = [abs(int(end_ind) - int(i)) for i in mass_discont_list]
+                        if mass_discont_list_test:
+                            if int(min(mass_discont_list_test)) < 150: # this is an arbitrary threshold that appears to work well - filters out dicontinuities early in tests
+                                end_ind = int(min(mass_discont_list))-4 # -4 is an arbitrary number that works well - this ensure that if the holder was removed, we go back 1 second for the final mass 
+                                if end_ind < 0:
+                                    end_ind = int(min(mass_discont_list))
+                        end_mass = float(data_temp_df.loc[str(end_ind),'Sample Mass'])
+                        if float(data_temp_df.loc[str(1),'Sample Mass']) - end_mass < 0:
+                            end_mass = float(data_temp_df.loc[str(1),'Sample Mass']) - float(scalar_data_series['SPECIMEN MASS'])
+
+                    except:
+                        end_mass = float(data_temp_df.loc[str(1),'Sample Mass']) - float(scalar_data_series['SPECIMEN MASS'])
+
+                mass_lost = ign_mass-end_mass
+                ml_10 = ign_mass - 0.1*mass_lost
+                ml_90 = ign_mass - 0.9*mass_lost
+                ml_10_ind = data_temp_df['Sample Mass'].sub(ml_10).abs().idxmin()
+                ml_90_ind = data_temp_df['Sample Mass'].sub(ml_90).abs().idxmin()
+
+                x = data_temp_df.loc[ml_10_ind:ml_90_ind, 'Time'].to_numpy()
+
+                try:
+                    soot_prod = (scipy.integrate.trapezoid(data_temp_df.loc[ml_10_ind:ml_90_ind,'Soot Mass Flow'], x = x))*1000 # g
+                    data_temp_df['Soot Yield (g/g)'] = soot_prod/(0.8*mass_lost)
+                except:
+                    pass
+
+                df_dict[label] = data_temp_df[['Time', 'HRRPUA', 'MLR', 'EHC', 'SPR', 'SEA', 'Extinction Coefficient', 'Soot Yield (g/g)']].copy()
                 df_dict[label].set_index(df_dict[label].loc[:,'Time'], inplace = True)
                 df_dict[label] = df_dict[label][df_dict[label].index.notnull()]
                 df_dict[label].drop('Time', axis = 1, inplace = True)
@@ -188,7 +228,7 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 t90 = data_temp_df['Sample Mass'].sub(data_temp_df.at['1','Sample Mass'] - 0.9*total_mass_lost).abs().idxmin()
 
                 output_df.at['Avg. Mass Loss Rate [10% to 90%] (g/m2s)', label] = float("{:.2f}".format(np.mean(data_temp_df.loc[t10:t90,'MLR']/surf_area_m2)))
-                output_df.at['Avg. Soot Yield [10% to 90%] (g/g)', label] = float("{:.8f}".format(np.mean(data_temp_df.loc[t10:t90,'Soot Yield'])))
+                output_df.at['Avg. Soot Yield [10% to 90%] (g/g)', label] = float("{:.8f}".format(np.nanmean(data_temp_df['Soot Yield (g/g)'].values)))
                 
                 save_dir2 = f'{save_dir}/{material}/'
                 if not os.path.exists(save_dir2): os.makedirs(save_dir2)
@@ -201,7 +241,7 @@ for d in sorted((f for f in os.listdir(data_dir) if not f.startswith(".")), key=
                 tign = float(scalar_data_series['TIME TO IGN'])
                 time = data_temp_df.loc[tmp, 'Time'].values
                 hrrpua = data_temp_df.loc[tmp, 'HRRPUA'].values
-                ysoot = data_temp_df.loc[tmp, 'Soot Yield'].values
+                ysoot = data_temp_df.loc[tmp, 'Soot Yield (g/g)'].values
                 hrrpua[time < tign] = 0
                 hrrpua[hrrpua < 0] = 0
                 hrrpua[np.isnan(hrrpua)] = 0
