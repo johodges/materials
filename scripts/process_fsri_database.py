@@ -75,6 +75,7 @@ def getConeData(material, directory):
         coneData[j]['HeatOfCombustion'] = cad_prop.loc['Avg. Effective Heat of Combustion (MJ/kg)', namespace]
         coneData[j]['InitialMass'] = cad_prop.loc['Initial Mass (g)', namespace]
         coneData[j]['FinalMass'] = cad_prop.loc['Final Mass (g)', namespace]
+        coneData[j]['SootYield'] = cad_prop.loc['Avg. Soot Yield [10% to 90%] (g/g)', namespace]
     
     coneData = pd.DataFrame(coneData).T
     
@@ -124,6 +125,7 @@ def importFsriMaterial(p, material, outInt, uniqueFluxes, filterWidth=11):
         avg180s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 180s average'].values)
         avg300s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 300s average'].values)
         avgHoC = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HeatOfCombustion'].values)
+        avgYs = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'SootYield'].values)
         initial_mass = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'InitialMass'].values)
         final_mass = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'FinalMass'].values)
         
@@ -209,6 +211,7 @@ def importFsriMaterial(p, material, outInt, uniqueFluxes, filterWidth=11):
         material_dict[flux]['avg300s'] = avg300s
         material_dict[flux]['thickness'] = thickness
         material_dict[flux]['HeatOfCombustion'] = avgHoC
+        material_dict[flux]['SootYield'] = avgYs
         material_dict[flux]['hrrpuas_interp'] = hrrpuas_interp
         material_dict[flux]['hrrpuas_interp_notign'] = hrrpuas_interp_notign
         material_dict[flux]['time_interp'] = time
@@ -243,7 +246,10 @@ def importFsriDatabase(data_dir, outInt, Tinfty=300, ignores=['']):
     for i in range(0, len(materials)):
         material = materials[i]
         p = os.path.join(os.path.abspath(data_dir), material)
-        material_dict = importFsriMaterial(p, material, outInt, uniqueFluxes)
+        try:
+            material_dict = importFsriMaterial(p, material, outInt, uniqueFluxes)
+        except:
+            print("Failed to import material %s"%(material))
         complete_materials[material] = material_dict
         
     return complete_materials
@@ -300,7 +306,7 @@ if __name__ == "__main__":
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
-    txt = txt + 'CharFraction,HeatOfCombustion,'
+    txt = txt + 'CharFraction,HeatOfCombustion,SootYield,'
     txt = txt + 'IgnitionTemperature,IgnitionTemperatureBasis,HeaderRows,FYI'
     fluxes = [25, 50, 75]
     for material in list(material_database.keys()):
@@ -309,6 +315,7 @@ if __name__ == "__main__":
         density = material_database[material]['density']
         thickness = material_database[material][50]['thickness']
         heat_of_combustion = material_database[material][50]['HeatOfCombustion']
+        soot_yield = material_database[material][50]['SootYield']
         initial_mass = material_database[material][50]['initial_mass']
         final_mass = material_database[material][50]['final_mass']
         matClass = material_database[material]['materialClass']
@@ -328,7 +335,7 @@ if __name__ == "__main__":
         txt = txt + '%s-25.csv-HRRPUA|%s-50.csv-HRRPUA|%s-75.csv-HRRPUA,'%(mat, mat, mat)
         txt = txt + '25|50|75,'
         txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,%0.8f,'%(density, conductivity, specific_heat, emissivity, thickness)
-        txt = txt + '%0.4f,%0.4f,'%(max([final_mass/initial_mass,0]), heat_of_combustion)
+        txt = txt + '%0.4f,%0.4f,%0.8f,'%(max([final_mass/initial_mass,0]), heat_of_combustion, soot_yield)
         txt = txt + 'Calculate,25|50,1|1|1,FSRI_materials'
         
         for flux in fluxes:
@@ -338,9 +345,9 @@ if __name__ == "__main__":
             hrrpuas = material_database[material][flux]['hrrpua']
             
             d = pd.DataFrame(np.array([times, hrrpuas]).T, columns=['Time','HRRPUA'])
-            if os.path.exists('..\\data\\fsri_materials_processed\\scaling_pyrolysis\\') is False:
-                os.mkdir('..\\data\\fsri_materials_processed\\scaling_pyrolysis\\')
-            dataFile = os.path.abspath('..\\data\\fsri_materials_processed\\scaling_pyrolysis\\%s-%02d.csv'%(mat, flux))
+            if os.path.exists('../data/fsri_materials_processed/scaling_pyrolysis/') is False:
+                os.mkdir('../data/fsri_materials_processed/scaling_pyrolysis/')
+            dataFile = os.path.abspath('../data/fsri_materials_processed/scaling_pyrolysis/%s-%02d.csv'%(mat, flux))
             d.to_csv(dataFile, index=False)
             
     with open('../data/fsri_spec_file.csv', 'w') as f:
