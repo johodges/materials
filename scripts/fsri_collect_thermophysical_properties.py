@@ -53,7 +53,7 @@ systemPath = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(systemPath,'..','data','fsri_materials_database','01_Data')+os.sep
 
 for d in os.scandir(data_dir):
-    material = d.path.split('/')[-1]
+    material = d.path.split(os.sep)[-1]
     print(f'{material} Thermal Conductivity')
     k_wet = []
     k_dry = []
@@ -86,7 +86,7 @@ for d in os.scandir(data_dir):
                     temp_df_ind = temp_df.index.to_series()
                     temp_df.index = temp_df_ind.round(0)
 
-                    f_str = file_path.split('/')[-1].split('_')
+                    f_str = file_path.split(os.sep)[-1].split('_')
                     rep = f_str[-1].split('.')[0]
 
                     col = f'{f_str[-4]}_{rep}'
@@ -112,13 +112,13 @@ for d in os.scandir(data_dir):
 
             if k_plot_data_cond.empty:
                 continue
-
+            fname = os.path.join(data_dir,material,'HFM',material+'_HFM_'+cond+'_conductivity.csv')
             k_plot_data_cond = k_plot_data_cond.rename(columns = {f'{cond}_mean': 'Conductivity Mean (W/m-K)', f'{cond}_std': 'Standard Deviation (W/m-K)'})
             k_plot_data_cond.index.names = ['Temperature (C)']
-            k_plot_data_cond.to_csv(f'{data_dir}{material}/HFM/{material}_HFM_{cond}_conductivity.csv', index_label = 'Temperature (C)')
+            k_plot_data_cond.to_csv(fname, index_label = 'Temperature (C)')
 
 for d in os.scandir(data_dir):
-    material = d.path.split('/')[-1]
+    material = d.path.split(os.sep)[-1]
 
     temp_df = pd.DataFrame()
     density_df = pd.DataFrame(index = ['mean', 'std'])
@@ -142,8 +142,8 @@ for d in os.scandir(data_dir):
 
     data = {'mean': [wet_mean_density, dry_mean_density], 'std': [wet_std_density, dry_std_density]}
     density_df = pd.DataFrame.from_dict(data, orient='index', columns = ['Wet', 'Dry'])
-
-    density_df.to_csv(f'{data_dir}{material}/HFM/{material}_HFM_Density_Summary.csv')
+    fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Density_Summary.csv')
+    density_df.to_csv(fname)
 
     print(f'{material} Heat Capacity')
     c_wet = []
@@ -181,7 +181,7 @@ for d in os.scandir(data_dir):
                     temp_df_ind = temp_df.index.to_series()
                     temp_df.index = temp_df_ind.round(1)
 
-                    f_str = file_path.split('/')[-1].split('_')
+                    f_str = file_path.split(os.sep)[-1].split('_')
                     rep = f_str[-1].split('.')[0]
 
                     col = f'{f_str[-4]}_{rep}'
@@ -209,27 +209,32 @@ for d in os.scandir(data_dir):
 
         c_plot_data_cond = c_plot_data_cond.rename(columns = {f'{cond}_mean': 'Specific Heat Mean (J/kg-K)', f'{cond}_std': 'Standard Deviation (J/kg-K)'})
         c_plot_data_cond.index.names = ['Temperature (C)']
-        c_plot_data_cond.to_csv(f'{data_dir}{material}/HFM/{material}_HFM_{cond}_specific_heat.csv', index_label = 'Temperature (C)')
+        fname = os.path.join(data_dir,material,'HFM',material+'_HFM_'+cond+'_specific_heat.csv')
+        c_plot_data_cond.to_csv(fname, index_label = 'Temperature (C)')
 
 for d in os.scandir(data_dir):
-    material = d.path.split('/')[-1]
+    material = d.path.split(os.sep)[-1]
     print(material)
     kpc_df = pd.Series(dtype='float64')
-
     try:
-        density_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Density_Summary.csv', index_col = 0)
-        conductivity_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Wet_conductivity.csv', index_col = 'Temperature (C)')
-        capacity_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Wet_specific_heat.csv', index_col = 'Temperature (C)')
+        fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Density_Summary.csv')
+        density_df = pd.read_csv(fname, index_col = 0)
+        fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Wet_conductivity.csv')
+        conductivity_df = pd.read_csv(fname, index_col = 'Temperature (C)')
+        fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Wet_specific_heat.csv')
+        capacity_df = pd.read_csv(fname, index_col = 'Temperature (C)')
     except:
         # print('NO WET DATA')
         try:
-            density_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Density_Summary.csv', index_col = 0)
-            conductivity_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Dry_conductivity.csv', index_col = 'Temperature (C)')
-            capacity_df = pd.read_csv(f'{data_dir}{material}/HFM/{material}_HFM_Dry_specific_heat.csv', index_col = 'Temperature (C)')
+            fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Density_Summary.csv')
+            density_df = pd.read_csv(fname, index_col = 0)
+            fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Dry_conductivity.csv')
+            conductivity_df = pd.read_csv(fname, index_col = 'Temperature (C)')
+            fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Dry_specific_heat.csv')
+            capacity_df = pd.read_csv(fname, index_col = 'Temperature (C)')
         except:
             # print('NO DRY DATA')
             continue
-
     try:
         kpc_df.at['Thermal Conductivity (W/m-K)'] = conductivity_df['Conductivity Mean (W/m-K)'].iloc[1]
         kpc_df.at['Heat Capacity (J/kg-K)'] = capacity_df['Specific Heat Mean (J/kg-K)'].iloc[3]
@@ -239,12 +244,13 @@ for d in os.scandir(data_dir):
             kpc_df.at['Density (kg/m3)'] = density_df.loc['mean', 'Dry']
     except:
         continue
-
-    try:    
-        kpc_df.to_csv(f'{data_dir}{material}/Cone/{material}_Ignition_Temp_Properties.csv', header=False)
+    try:
+        fname = os.path.join(data_dir,material,'Cone',material+'_Ignition_Temp_Properties.csv')
+        kpc_df.to_csv(fname, header=False)
     except:
-        kpc_df.to_csv(f'{data_dir}{material}/HFM/{material}_Ignition_Temp_Properties.csv', header=False)
+        fname = os.path.join(data_dir,material,'HFM',material+'_Ignition_Temp_Properties.csv')
+        kpc_df.to_csv(fname, header=False)
     
     save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
     if not os.path.exists(save_dir): os.makedirs(save_dir)
-    kpc_df.to_csv(f'{save_dir}/Ignition_Temp_Properties.csv', header=False)
+    kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
