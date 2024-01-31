@@ -6,6 +6,7 @@ if __name__ == "__main__":
     systemPath = os.path.dirname(os.path.abspath(__file__))
     
     parser = argparse.ArgumentParser()
+    parser.add_argument('call')
     parser.add_argument('--clean', action='store_true', help='Deletes processed data and outputs prior to run')
     
     cmdargs = parser.parse_args(args)
