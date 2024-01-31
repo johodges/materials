@@ -731,7 +731,7 @@ def getMaterialClass(material):
         if len(list(set(tmp))) == 1:
             materialClass = getMaterialClass(tmp[0])
         else:
-            materialClass = 'Mixture'
+            materialClass = 'Mixtures'
         return materialClass
     
     woods = ['balsa', 'composite_deck_board', 'douglas_fir', 'engineered_flooring', 'eucalyptus',

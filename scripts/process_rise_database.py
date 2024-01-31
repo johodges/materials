@@ -314,7 +314,7 @@ if __name__ == "__main__":
     material_database = material_database_filtered
     resultDir = "../../../out/Scaling_Pyrolysis/"
     inputFileDir = "../../../fds/Validation/Scaling_Pyrolysis/"
-    expFileDir = "../../../exp/RISE_Materials/"
+    #expFileDir = "../../../exp/RISE_Materials/"
     emissivity = 1
     txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
@@ -347,7 +347,7 @@ if __name__ == "__main__":
             
             dataFiles = ''
             for flux in fluxes:
-                dataFile = os.path.join(expFileDir, '%s-%02d.csv'%(mat, flux))
+                dataFile = os.path.join(out_dir, '%s-%02d.csv'%(mat, flux))
                 dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
@@ -358,8 +358,15 @@ if __name__ == "__main__":
                 refFlux = fluxes[ind]
             matClass = getMaterialClass(material)
             if matClass == 'Unknown': code = 's'
-            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat, matClass, dataFiles, resultDir)
-            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, expFileDir, refFlux, thickness, mat, refFlux, mat, refFlux)
+            
+            mat_name = 'RISE_'+mat
+            while len(mat_name) > 40:
+                tmp = mat_name.split('_')
+                long_ind = np.argmax([len(t) for t in tmp])
+                tmp[long_ind] = tmp[long_ind][:-1]
+                mat_name = '_'.join(tmp)
+            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat_name, matClass, dataFiles, resultDir)
+            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir, refFlux, thickness, mat, refFlux, mat, refFlux)
             
             for flux in fluxes:
                 txt = txt + '%s-%0.0f.csv-Time|'%(mat, flux)
