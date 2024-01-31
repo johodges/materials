@@ -10,6 +10,7 @@ import os, shutil
 import pandas as pd
 from matplotlib.lines import Line2D
 import glob
+import subprocess
 
 from plotting import getJHcolors, getNewColors
 
@@ -48,9 +49,8 @@ def findFds():
             return fdsDir, check
     print("Warning FDS not found")
 
-def buildFdsFile(chid, cone_hf_ref, cone_d_ref, emissivity, conductivity, density, 
-                 specific_heat, Tign, time, hrrpua, tend, deltas, fluxes, front_h,
-                 case_tigns=False, ignitionMode='Temperature', outputTemperature=False,
+def buildFdsFile(chid, cases, properties, Tign, front_h,
+                 ignitionMode='Temperature', outputTemperature=False,
                  calculateDevcDt=True, devc_dt=1.,
                  qflame_method='Froude', qflame_fixed=25):
     ''' Generate a solid phase only FDS input file representing cone
@@ -73,15 +73,20 @@ def buildFdsFile(chid, cone_hf_ref, cone_d_ref, emissivity, conductivity, densit
         4. All samples are assumed to have 0.5in / 12.7 mm of ceramic
            fiber insulation behind them.
     '''
-    hrrpua_ref = getRepresentativeHrrpua(hrrpua, time)
-    qref = estimateExposureFlux(cone_hf_ref, hrrpua_ref, qflame_method, qflame_fixed)
+    
+    tend = np.nanmax([(cases[c]['times_trimmed'].max()+cases[c]['tign'])*2 for c in cases])
+    
+    density = properties['density']
+    conductivity = properties['conductivity']
+    emissivity = properties['emissivity']
+    specific_heat = properties['specific_heat']
     
     tempOutput = '.TRUE.' if outputTemperature else '.FALSE.'
     DT_DEVC = devc_dt
     if calculateDevcDt:
         NFRAMES = 1200/1.
         DT_DEVC = tend/NFRAMES
-    if ignitionMode == 'Time': Tign = 20
+    if ignitionMode == 'Time': Tign = -273.15
     txt = "&HEAD CHID='%s', /\n"%(chid)
     txt = txt+"&TIME DT=1., T_END=%0.1f /\n"%(tend)
     txt = txt+"&DUMP DT_CTRL=%0.1f, DT_DEVC=%0.1f, DT_HRR=%0.1f, SIG_FIGS=4, SIG_FIGS_EXP=2, /\n"%(DT_DEVC, DT_DEVC, DT_DEVC)
@@ -92,38 +97,66 @@ def buildFdsFile(chid, cone_hf_ref, cone_d_ref, emissivity, conductivity, densit
     #txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.2, DENSITY=585., EMISSIVITY=1., SPECIFIC_HEAT=0.8, /\n"
     txt = txt+"&MATL ID='SAMPLE', CONDUCTIVITY=%0.4f, DENSITY=%0.1f, EMISSIVITY=%0.4f, SPECIFIC_HEAT=%0.4f, /\n"%(conductivity, density, emissivity, specific_heat)
     
-    prevTime=-1e6
-    for i in range(0, len(time)):
-        if (time[i]-prevTime) < 0.0001:
-            #txt = txt+"&RAMP ID='CONE-RAMP', T=%0.4f, F=%0.1f, /\n"%(time[i]-time[0]+0.0001, hrrpua[i])
-            pass
-        else:
-            txt = txt+"&RAMP ID='CONE-RAMP', T=%0.4f, F=%0.1f, /\n"%(time[i]-time[0], hrrpua[i])
-        prevTime = time[i]
+    all_names = []
+    all_fluxes = [cases[c]['cone'] for c in cases]
+    all_deltas = [cases[c]['delta'] for c in cases]
+    all_tigns = [cases[c]['tign'] for c in cases]
+    all_names = [('CONE_%03.2f_%03d'%(cases[c]['delta']*1e3, cases[c]['cone'])).replace('.','p') for c in cases]
+    for i, c in enumerate(cases):
+        time = cases[c]['times_trimmed']
+        hrrpua = cases[c]['hrrs_trimmed']
+        namespace = all_names[i]
+        prevTime=-1e6
+        for i in range(0, len(time)):
+            if (time[i]-prevTime) < 0.0001:
+                #txt = txt+"&RAMP ID='CONE-RAMP', T=%0.4f, F=%0.1f, /\n"%(time[i]-time[0]+0.0001, hrrpua[i])
+                pass
+            else:
+                txt = txt+"&RAMP ID='%s', T=%0.4f, F=%0.1f, /\n"%(namespace, time[i]-time[0], hrrpua[i])
+            prevTime = time[i]
+        txt = txt+"&RAMP ID='%s', T=%0.4f, F=%0.1f, /\n"%(namespace, prevTime-time[0]+1, 0.0)
+    
+    ind = np.argsort(all_fluxes)
+    all_names = [all_names[i] for i in ind]
+    all_deltas = [all_deltas[i] for i in ind]
+    all_tigns = [all_tigns[i] for i in ind]
+    all_fluxes = [all_fluxes[i] for i in ind]
+    
+    ind = np.argsort(all_deltas)
+    all_names = [all_names[i] for i in ind]
+    all_fluxes = [all_fluxes[i] for i in ind]
+    all_tigns = [all_tigns[i] for i in ind]
+    all_deltas = [all_deltas[i] for i in ind]
+    
     y = -0.05
-    for i, hf in enumerate(fluxes):
-        hf_ign, scaled_hrrpua = estimateHrrpua(cone_hf_ref, hrrpua_ref, hf, qflame_method, qflame_fixed)
+    for i in range(0, len(all_names)):
+        flux = all_fluxes[i]
+        delta = all_deltas[i]
+        namespace = all_names[i]
         
-        delta = deltas[i]
+        filtered_flux = [c for c,n in zip(all_fluxes,all_names) if n != namespace]
+        filtered_delta = [c for c,n in zip(all_deltas,all_names) if n != namespace]
+        filtered_name = [c for c,n in zip(all_names,all_names) if n != namespace]
+        
         if i%3 == 0: y = y + 0.1
         XYZ = [((i % 3))*0.1+0.05, y, 0.0]
         XB = [XYZ[0]-0.05, XYZ[0]+0.05, XYZ[1]-0.05, XYZ[1]+0.05, 0.0,0.0]
         
-        namespace = '%02d-%03d'%(hf, delta*1e3)
         
-        txt = txt+"&SURF ID='SAMPLE-%s', EXTERNAL_FLUX=1., "%(namespace)
+        txt = txt+"&SURF ID='SAMPLE-%s', EXTERNAL_FLUX=%0.1f, "%(namespace, flux)
         txt = txt+"HEAT_TRANSFER_COEFFICIENT=%0.4f, HEAT_TRANSFER_COEFFICIENT_BACK=10., "%(front_h)
         txt = txt+"HRRPUA=1., IGNITION_TEMPERATURE=%0.1f, MATL_ID(1:2,1)='SAMPLE','BACKING', "%(Tign)
-        txt = txt+"RAMP_EF='IGNITION_RAMP-%s', RAMP_Q='CONE-RAMP', "%(namespace)
-        txt = txt+"REFERENCE_HEAT_FLUX=%0.4f, REFERENCE_HEAT_FLUX_TIME_INTERVAL=1., REFERENCE_CONE_THICKNESS=%0.8f, "%(qref, cone_d_ref)
+        txt = txt+"REFERENCE_HEAT_FLUX_TIME_INTERVAL=0.5, "
+        txt = txt+"RAMP_Q="
+        for j in range(0, len(filtered_name)):
+            txt = txt + "'%s',"%(filtered_name[j])
+        txt = txt+"REFERENCE_HEAT_FLUX="
+        for j in range(0, len(filtered_name)):
+            txt = txt + "%0.4f,"%(filtered_flux[j])
+        txt = txt+"REFERENCE_THICKNESS="
+        for j in range(0, len(filtered_name)):
+            txt = txt + "%0.4f,"%(filtered_delta[j])
         txt = txt+'THICKNESS(1:2)=%0.8f,%0.8f, /\n'%(delta, 0.0254/2)
-        
-        if ignitionMode == 'Temperature':
-            txt = txt+"&RAMP ID='IGNITION_RAMP-%s', T=%0.1f, F=%0.4f, DEVC_ID='IGNITION_DEVC-%s', /\n"%(namespace, 0.0, hf, namespace)
-            txt = txt+"&RAMP ID='IGNITION_RAMP-%s', T=%0.1f, F=%0.4f, /\n"%(namespace, 1.0, hf_ign)
-        else:
-            txt = txt+"&RAMP ID='IGNITION_RAMP-%s', T=%0.1f, F=%0.4f, /\n"%(namespace, 0.0, hf_ign)
-            txt = txt+"&RAMP ID='IGNITION_RAMP-%s', T=%0.1f, F=%0.4f, /\n"%(namespace, 1.0, hf_ign)
         
         txt = txt+"&OBST ID='SAMPLE-%s', SURF_ID='SAMPLE-%s', XB="%(namespace, namespace)
         for x in XB:
@@ -137,7 +170,7 @@ def buildFdsFile(chid, cone_hf_ref, cone_d_ref, emissivity, conductivity, densit
         
         txt = txt+"&CTRL ID='IGNITION-CTRL-%s', FUNCTION_TYPE='ANY', INPUT_ID='WALL TEMPERATURE-%s', /\n"%(namespace, namespace)
         if ignitionMode == 'Time':
-            txt = txt+"&DEVC ID='TIGN-%s', XYZ=0,0,0, SETPOINT=%0.4f, QUANTITY='TIME', INITIAL_STATE=.FALSE., /\n"%(namespace, case_tigns[i])
+            txt = txt+"&DEVC ID='TIGN-%s', XYZ=0,0,0, SETPOINT=%0.4f, QUANTITY='TIME', INITIAL_STATE=.FALSE., /\n"%(namespace, all_tigns[i])
             
         txt = txt+"&DEVC ID='IGNITION_DEVC-%s', CTRL_ID='IGNITION-CTRL-%s', IOR=3, OUTPUT=.FALSE., QUANTITY='CONTROL', "%(namespace,namespace)
         txt = txt+"XYZ=%0.4f,%0.4f,%0.4f, /\n"%(XYZ[0], XYZ[1], XYZ[2])
@@ -147,7 +180,6 @@ def buildFdsFile(chid, cone_hf_ref, cone_d_ref, emissivity, conductivity, densit
         
         txt = txt+"&DEVC ID='IGNITION-TIME-%s', NO_UPDATE_DEVC_ID='IGNITION_DEVC-%s', OUTPUT=.FALSE., "%(namespace,namespace)
         txt = txt+"QUANTITY='TIME', XYZ=%0.4f,%0.4f,%0.4f, /\n"%(XYZ[0], XYZ[1], XYZ[2])
-        
                         
     return txt
 
@@ -160,7 +192,7 @@ def runModel(outdir, outfile, mpiProcesses, fdsdir, fdscmd, printLiveOutput=Fals
     my_env['PATH'] = fdsdir + ';' + my_env['I_MPI_ROOT'] + ';' + my_env["PATH"]
     my_env['OMP_NUM_THREADS'] = '1'
     
-    process = subprocess.Popen([fdscmd, outfile, ">&", "log.err"], cwd=r'%s'%(outdir), env=my_env, shell=False, stdout=subprocess.DEVNULL)
+    process = subprocess.Popen([fdscmd, outfile, ">&", "log.err"], cwd=r'%s'%(outdir), env=my_env, shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     out, err = process.communicate()
     errcode = process.returncode   
@@ -658,6 +690,10 @@ def processSingleCase(c, data):
     tmp[np.isnan(tmp)] = 0
     times_trimmed[np.isnan(times_trimmed)] = 0
     totalEnergy = np.trapz(tmp,  times_trimmed)
+    
+    while times_trimmed[-1] == 0:
+        times_trimmed = times_trimmed[:-1]
+        hrrs_trimmed = hrrs_trimmed[:-1]
     
     c['tign'] = tign
     c['times'] = times
