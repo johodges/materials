@@ -49,7 +49,8 @@ def unique(list1):
 
     return unique_list
 
-data_dir = '../data/fsri_materials_database/01_Data/'
+systemPath = os.path.dirname(os.path.abspath(__file__))
+data_dir = os.path.join(systemPath,'..','data','fsri_materials_database','01_Data')+os.sep
 
 for d in os.scandir(data_dir):
     material = d.path.split('/')[-1]
@@ -243,7 +244,7 @@ for d in os.scandir(data_dir):
         kpc_df.to_csv(f'{data_dir}{material}/Cone/{material}_Ignition_Temp_Properties.csv', header=False)
     except:
         kpc_df.to_csv(f'{data_dir}{material}/HFM/{material}_Ignition_Temp_Properties.csv', header=False)
-
-    save_dir = f'../data/fsri_materials_processed/{material}/'
+    
+    save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
     if not os.path.exists(save_dir): os.makedirs(save_dir)
     kpc_df.to_csv(f'{save_dir}/Ignition_Temp_Properties.csv', header=False)

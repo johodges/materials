@@ -13,11 +13,12 @@ from algorithms import interpolateExperimentalData, findLimits
 from algorithms import getFixedModelParams
 
 def getMaterial(material, style='md_lmhf'):
+    systemPath = os.path.dirname(os.path.abspath(__file__))
     thicknesses = style.split('_')[0]
     fluxes = style.split('_')[1]
     
     if material == 'PC':
-        referenceCurve = "../data/faa_polymers/PC.csv"
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','PC.csv')
         density = 1180.0
         conductivity = 0.22 
         specific_heat = 1.9
@@ -48,7 +49,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('h' in fluxes) and ('h' in thicknesses): pass
     
     elif material == 'PVC':
-        referenceCurve = "../data/faa_polymers/PVC.csv"
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','PVC.csv')
         density = 1430.0
         conductivity = 0.17 
         specific_heat = 1.55
@@ -77,7 +78,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('9-75')
         if ('h' in fluxes) and ('h' in thicknesses): pass
     elif material == 'PMMA':
-        referenceCurve = "../data/faa_polymers/pmma.csv"
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pmma.csv')
         density = 1100
         conductivity = 0.20
         specific_heat = 2.2
@@ -108,7 +109,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HIPS':
-        referenceCurve = "../data/faa_polymers/hips.csv"
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','hips.csv')
         density = 950
         conductivity = 0.22
         specific_heat = 2.0
@@ -139,7 +140,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HDPE':
-        referenceCurve = "../data/faa_polymers/hdpe.csv"
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','hdpe.csv')
         density = 860
         conductivity = 0.29
         specific_heat = 3.5
@@ -221,6 +222,8 @@ def processCaseData_old(material, style='md_lmhf', save_csv=False):
     return cases, case_basis
 
 if __name__ == "__main__":
+    systemPath = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(systemPath,'..','data','faa_materials')+os.sep
     
     # Compare normalization schemes on model predictions
     style = 'md_mf'
@@ -289,7 +292,7 @@ if __name__ == "__main__":
             
             thickness_txt = '%s%0.8f|'%(thickness_txt, thicknesses[i]/1000)
             
-            dataFile = '../data/fsri_materials_processed/scaling_pyrolysis/%s-%02d.csv'%(mat, fluxes[i])
+            dataFile = os.path.join(data_dir,'faa_materials_processed','scaling_pyrolysis','%s-%02d.csv'%(mat, fluxes[i]))
             dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
@@ -306,7 +309,7 @@ if __name__ == "__main__":
         txt = txt + '%0.4f,%0.4f,%0.8f,'%(nu_char, heat_of_combustion, soot_yield)
         txt = txt + 'Calculate,' + flux_txt[:-1] +',1,FAA_materials'
         
-    with open('../data/faa_spec_file.csv', 'w') as f:
+    with open(os.path.join(systemPath,'..','data','faa_spec_file.csv'), 'w') as f:
         f.write(txt)
         
             

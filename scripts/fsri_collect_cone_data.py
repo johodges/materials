@@ -26,8 +26,10 @@ import shutil
 import scipy.integrate
 
 # Define variables #
-data_dir = '../data/fsri_materials_database/01_Data/'
-save_dir = '../data/fsri_materials_processed/'
+systemPath = os.path.dirname(os.path.abspath(__file__))
+data_dir = os.path.join(systemPath,'..','data','fsri_materials_database','01_Data')+os.sep
+save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed')+os.sep
+
 if not os.path.exists(save_dir): os.makedirs(save_dir)
 
 hf_list_default = ['25', '50', '75']

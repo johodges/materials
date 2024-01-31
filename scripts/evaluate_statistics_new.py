@@ -7,7 +7,7 @@ Created on Sat Apr 22 18:18:31 2023
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
+import os, sys, argparse, glob
 
 from plotting import getJHcolors, getPlotLimits
 from algorithms import getMaterials, processCaseData, sortCases
@@ -17,6 +17,26 @@ from algorithms import getTimeAveragedPeak
 from algorithms import getTimeAveragedEnergy, getTimeAveraged_timeToEnergy
 
 if __name__ == "__main__":
+    
+    args = sys.argv
+    fileDir = os.path.dirname(os.path.abspath(__file__))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('call')
+    parser.add_argument('--clean', action='store_true', help='Deletes processed data and outputs prior to run')
+    
+    cmdargs = parser.parse_args(args)
+    if cmdargs.clean:
+        for f in glob.glob(os.path.join(systemPath,'..','input_files','*','*')):
+            os.remove(f)
+        dirs = sorted(glob.glob(os.path.join(systemPath,'..','input_files','*')))
+        for f in dirs:
+            os.rmdir(f)
+        for f in glob.glob(os.path.join(systemPath,'..','figures','*.png')):
+            os.remove(f)
+        for f in glob.glob(os.path.join(systemPath,'..','figures','*.xlsx')):
+            os.remove(f)
+        for f in glob.glob(os.path.join(systemPath,'..','output','*.csv')):
+            os.remove(f)
     
     # Initialize variables
     fs=16
@@ -32,7 +52,7 @@ if __name__ == "__main__":
     
     # Prepare directories
     fdsdir, fdscmd = findFds()
-    fileDir = os.path.dirname(os.path.abspath(__file__))
+    
     
     output_statistics = dict()
     for material in materials:

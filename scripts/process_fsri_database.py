@@ -295,7 +295,8 @@ def findLimits(times, HRRs, energyCutoff1, energyCutoff2):
 
 if __name__ == "__main__":
     
-    data_dir = '../data/fsri_materials_processed/'
+    systemPath = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(systemPath,'..','data','fsri_materials_processed')+os.sep
     material_database = importFsriDatabase(data_dir, 15)
     
     resultDir = data_dir
@@ -325,7 +326,7 @@ if __name__ == "__main__":
         mat = 'FSRI_%s'%(material)
         dataFiles = ''
         for flux in fluxes:
-            dataFile = '../data/fsri_materials_processed/scaling_pyrolysis/%s-%02d.csv'%(mat, flux)
+            dataFile = os.path.join(data_dir,'scaling_pyrolysis','%s-%02d.csv'%(mat, flux))
             dataFiles = dataFiles + dataFile + '|'
         dataFiles = dataFiles[:-1]
         
@@ -345,10 +346,11 @@ if __name__ == "__main__":
             hrrpuas = material_database[material][flux]['hrrpua']
             
             d = pd.DataFrame(np.array([times, hrrpuas]).T, columns=['Time','HRRPUA'])
-            if os.path.exists('../data/fsri_materials_processed/scaling_pyrolysis/') is False:
-                os.mkdir('../data/fsri_materials_processed/scaling_pyrolysis/')
-            dataFile = os.path.abspath('../data/fsri_materials_processed/scaling_pyrolysis/%s-%02d.csv'%(mat, flux))
+            if os.path.exists(os.path.join(data_dir,'scaling_pyrolysis')) is False:
+                os.mkdir(os.path.join(data_dir,'scaling_pyrolysis'))
+            dataFile = os.path.abspath(os.path.join(data_dir,'scaling_pyrolysis','%s-%02d.csv'%(mat, flux)))
             d.to_csv(dataFile, index=False)
-            
-    with open('../data/fsri_spec_file.csv', 'w') as f:
+    
+    print(os.path.join(systemPath,'..','data','fsri_spec_file.csv'))
+    with open(os.path.join(systemPath,'..','data','fsri_spec_file.csv'),'w') as f:
         f.write(txt)

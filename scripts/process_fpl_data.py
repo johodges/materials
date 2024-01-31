@@ -260,14 +260,15 @@ def checkForFloat(string):
         return False
 
 if __name__ == "__main__":
-    data_dir ="../data/fpl_materials/"
+    systemPath = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(systemPath,'..','data','fpl_materials')+os.sep
     material_database = importFplDatabase(data_dir, 15)
     
     import matplotlib.pyplot as plt
     
     resultDir = ""
     inputFileDir = ""
-    expFileDir = "../data/fpl_materials_processed/"
+    expFileDir = os.path.join(systemPath,'..','data','fpl_materials_processed')+os.sep
     emissivity = 1
     txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
@@ -334,8 +335,7 @@ if __name__ == "__main__":
             #out_hrrpuas[out_times < tign] = 0
             d = pd.DataFrame(np.array([out_times, out_hrrpuas]).T, columns=['Time','HRRPUA'])
             #dataFile = os.path.abspath('fpl_materials//%s-%02d.csv'%(mat, flux))
-            dataFile = os.path.abspath('../data/fpl_materials_processed/%s-%02d.csv'%(mat, flux))
+            dataFile = os.path.join(expFileDir,'%s-%02d.csv'%(mat, flux))
             d.to_csv(dataFile, index=False)
-            
-    with open('../data/fpl_spec_file.csv', 'w') as f:
+    with open(os.path.join(systemPath,'..','data','fpl_spec_file.csv'),'w') as f:
         f.write(txt)
