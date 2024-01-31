@@ -20,9 +20,9 @@ if __name__ == "__main__":
         for f in glob.glob(os.path.join(systemPath,'..','data','*_processed','*.csv')):
             os.remove(f)
     
-    subprocess.call([sys.executable, os.path.join(_this_dir, 'fsri_collect_thermophysical_properties.py')])
-    subprocess.call([sys.executable, os.path.join(_this_dir, 'fsri_collect_cone_data.py')])
-    subprocess.call([sys.executable, os.path.join(_this_dir, 'process_fsri_database.py')])
-    subprocess.call([sys.executable, os.path.join(_this_dir, 'process_faa_data.py')])
-    subprocess.call([sys.executable, os.path.join(_this_dir, 'process_fpl_data.py')])
+    subprocess.call([sys.executable, os.path.join(systemPath, 'fsri_collect_thermophysical_properties.py')])
+    subprocess.call([sys.executable, os.path.join(systemPath, 'fsri_collect_cone_data.py')])
+    subprocess.call([sys.executable, os.path.join(systemPath, 'process_fsri_database.py')])
+    subprocess.call([sys.executable, os.path.join(systemPath, 'process_faa_data.py')])
+    subprocess.call([sys.executable, os.path.join(systemPath, 'process_fpl_data.py')])
     
