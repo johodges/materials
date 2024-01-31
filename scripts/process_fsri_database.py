@@ -351,6 +351,5 @@ if __name__ == "__main__":
             dataFile = os.path.abspath(os.path.join(data_dir,'scaling_pyrolysis','%s-%02d.csv'%(mat, flux)))
             d.to_csv(dataFile, index=False)
     
-    print(os.path.join(systemPath,'..','data','fsri_spec_file.csv'))
     with open(os.path.join(systemPath,'..','data','fsri_spec_file.csv'),'w') as f:
         f.write(txt)
