@@ -277,9 +277,26 @@ def findLimits(times, HRRs, energyCutoff1, energyCutoff2):
 
 if __name__ == "__main__":
     
+    systemPath = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(systemPath,'..','data','rise_materials')+os.sep
+    out_dir = os.path.join(systemPath,'..','data','rise_materials_processed')+os.sep
     
-    data_dir = "E:\\projects\\1JLH-NIST2022\\rise_database\\raw\\"
-    import glob
+    try:
+        os.mkdir(out_dir)
+    except:
+        pass
+    
+    ignores = ['-29mm',
+               'Carpet_Glue_Aluminum_plate_2_mm-05mm',
+               'FR_EPS_Calcium_silicate_board-25mm',
+               'FR_Particle_board-12mm',
+               'Mineral_wool_faced_Combustible_face-30mm',
+               'Plastic_faced_steel_sheet_Mineral_wool-25mm',
+               'Plywood-12mm',
+               'polyester_fabric-00mm',
+               'RPPVC_EPR-16mm',
+               'Solid_acrylic-12mm',
+               ]
     
     material_database = defaultdict(bool)
     
@@ -526,11 +543,8 @@ if __name__ == "__main__":
                 material_database_filtered[material][thickness][flux]['hrrpua'] = outHrrpua
                 
                 d = pd.DataFrame(np.round(np.array([outTime, outHrrpua]).T, decimals=1), columns=['Time','HRRPUA'])
-                dataFile = os.path.abspath('E:\\projects\\1JLH-NIST2022\\exp\\RISE_Materials\\%s-%02dmm-%02d.csv'%(material.replace('|','_').replace(' ','_').replace(',','_'), thickness, flux))
+                dataFile = os.path.join(out_dir, '%s-%02dmm-%02d.csv'%(material.replace('|','_').replace(' ','_').replace(',','_'), thickness, flux))
                 d.to_csv(dataFile, index=False)
-                
-                #assert False, "Stopped"
-                #print(material.split('_')[0], thickness, flux, testCount, tign)
     
     material_database = material_database_filtered
     resultDir = "../../../out/Scaling_Pyrolysis/"
@@ -558,6 +572,10 @@ if __name__ == "__main__":
             number = 1
             mat = '%s-%02dmm'%(material, thickness)
             mat = mat.replace(',','_').replace(' ','_').replace('|','_')
+            
+            if mat in ignores:
+                break
+            
             dataFiles = ''
             for flux in fluxes:
                 dataFile = os.path.join(expFileDir, '%s-%02d.csv'%(mat, flux))
@@ -592,9 +610,8 @@ if __name__ == "__main__":
             txt = txt[:-1] + ','
             txt = txt + 'RISE_materials'
             
-                
-        with open('rise_spec_file.csv', 'w') as f:
-            f.write(txt)
+    with open(os.path.join(systemPath,'..','data','rise_spec_file.csv'), 'w') as f:
+        f.write(txt)
 
     
     
