@@ -19,7 +19,7 @@ from algorithms import getTimeAveragedEnergy, getTimeAveraged_timeToEnergy
 if __name__ == "__main__":
     
     args = sys.argv
-    fileDir = os.path.dirname(os.path.abspath(__file__))
+    systemPath = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser()
     parser.add_argument('call')
     parser.add_argument('--clean', action='store_true', help='Deletes processed data and outputs prior to run')
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     
     output_statistics = dict()
     for material in materials:
+        #if 'RISE_PVC_wall_carpet_paper_plasterboard-' not in material: continue
         output_statistics[material] = dict()
         xlim, ylim = getPlotLimits(material)
         spec_file_dict[material] = processCaseData(spec_file_dict[material])
@@ -79,7 +80,7 @@ if __name__ == "__main__":
 
         fluxes, deltas, tigns, cases_to_plot = sortCases(cases)
         
-        workingDir = fileDir + os.sep +'..' + os.sep + 'input_files' + os.sep+ material + os.sep
+        workingDir = systemPath + os.sep +'..' + os.sep + 'input_files' + os.sep+ material + os.sep
         workingDir = workingDir.replace(' ', '_')
         
         if os.path.exists(workingDir) is False: os.mkdir(workingDir)

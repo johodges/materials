@@ -155,7 +155,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
             txt = txt + "%0.4f,"%(filtered_flux[j])
         txt = txt+"REFERENCE_THICKNESS="
         for j in range(0, len(filtered_name)):
-            txt = txt + "%0.4f,"%(filtered_delta[j])
+            txt = txt + "%0.8f,"%(filtered_delta[j])
         txt = txt+'THICKNESS(1:2)=%0.8f,%0.8f, /\n'%(delta, 0.0254/2)
         
         txt = txt+"&OBST ID='SAMPLE-%s', SURF_ID='SAMPLE-%s', XB="%(namespace, namespace)
