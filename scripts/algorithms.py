@@ -723,6 +723,17 @@ def getMaterialClass(material):
     '''
     materialClass = 'Unknown'
     m = material.lower()
+    m = m.replace(' ','_')
+    
+    if '|' in m:
+        tmp = m.split('|')
+        tmp = [t.lower() for t in tmp]
+        if len(list(set(tmp))) == 1:
+            materialClass = getMaterialClass(tmp[0])
+        else:
+            materialClass = 'Mixture'
+        return materialClass
+    
     woods = ['balsa', 'composite_deck_board', 'douglas_fir', 'engineered_flooring', 'eucalyptus',
               'hardboard','homasote','luan','masonite','mdf','oak','osb',
               'particle_board','particleboard','pine',
@@ -730,18 +741,17 @@ def getMaterialClass(material):
     for w in woods:
         if w in m: materialClass = 'Wood-Based'
     
-    polymers = ['acrylic','hdpe','hips','ldpe','nylon','pc','pp','pvc','pmma','pet','plastic','polyester',
+    polymers = ['acrylic','hdpe','hips','ldpe','nylon','pc','pp','pvc','pmma','pet','plastic','polycarbonate','polyester','polyolefin','pvdf',
                 'vinyl']
     for p in polymers:
         if p in m: materialClass = 'Polymers'
     others = ['asphalt', 'cardboard', 'cotton', 'felt','gypsum', 'hemp', 'insulation', 'membrane',
-              'rug_pad','window_screen','wool_rug','xps_foam_board']
+              'rug_pad','window_screen','wool_rug','xps_foam_board', 'wool_fabric', 'woolfabric']
     for o in others:
         if o in m: materialClass = 'Others'
     
     if materialClass == 'Unknown':
-        print(material, m)
-        assert False, "Stopped"
+        print("Warning material %s class is unknown"%(m))
     return materialClass
 
 def calculateThicknessFromHrr(hrrs_trimmed, times_trimmed, mat, c):

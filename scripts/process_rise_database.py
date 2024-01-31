@@ -3,277 +3,7 @@ import glob
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-
-def extractConeAnalysisData(values, scaled_times, tigns, uniqueFluxes):
-    coneAnalysisData = dict()
-    for i, flux in enumerate(uniqueFluxes):
-        
-        v = values[i]
-        t = scaled_times[i]
-        tign = tigns[i]
-        coneAnalysisData[flux] = dict()
-        coneAnalysisData[flux]['peakHRRPUA'] = np.max(v)
-        coneAnalysisData[flux]['timeToPeak'] = t[np.argmax(v)]-tign
-        
-        tMax = int(np.ceil(t.max()))
-        tMax = max([tMax, 60])
-        t2 = np.linspace(0, tMax, tMax+1)
-        v2 = np.interp(t2, t, v)
-        
-        dt = t2[1] - t2[0]
-        
-        filters = [int(60/dt), int(180/dt), int(300/dt)]
-        filteredValues = []
-        for f in filters:
-            fil = np.ones(f)/float(f)
-            vfilt = np.convolve(v2, fil, mode='same')
-            filteredValues.append(np.max(vfilt))
-        
-        coneAnalysisData[flux]['avg60s'] = filteredValues[0]
-        coneAnalysisData[flux]['avg180s'] = filteredValues[1]
-        coneAnalysisData[flux]['avg300s'] = filteredValues[2]
-    return coneAnalysisData
-
-def getConeData(material, directory):
-    p = os.path.abspath(directory)
-    files = glob.glob(p+os.sep+'cone_H*')
-    files = [x for x in files if "Scalar" not in x]
-    
-    cad_prop = pd.read_csv(p+os.sep+material+'_Cone_Analysis_Data.csv', index_col=0)
-    tmp_prop = pd.read_csv(p+os.sep+material+'_Ignition_Temp_Properties.csv', header=None, index_col=0).T
-    density = tmp_prop['Density (kg/m3)'].values[0]
-    coneData = dict()
-    for j, file in enumerate(files):
-        dc = pd.read_csv(file)
-        rev = file.split('_')[-1].split('.csv')[0]
-        HF = file.split('HF')[1].split('Scalar')[0].split('_')[0]
-        f = material + '_Cone_HF' + HF + 'Scalar_*_' + rev + '.csv'
-        d = glob.glob(os.path.join(directory, f))[0]
-        ds = pd.read_csv(d, header=None, index_col=0)
-        
-        namespace = file.split('cone_')[-1].split('.csv')[0]
-        
-        coneData[j] = dict()
-        coneData[j]['flux'] = float(ds.loc['HEAT FLUX', 1]) # kW/m2
-        coneData[j]['mass'] = float(ds.loc['SPECIMEN MASS', 1]) / 1000 # kg
-        coneData[j]['area'] = float(ds.loc['SURF AREA', 1]) # m2
-        coneData[j]['thickness'] = coneData[j]['mass'] / (density*coneData[j]['area'])
-        coneData[j]['time'] = dc['Time']
-        coneData[j]['hrrpua'] = dc['HRRPUA']
-        coneData[j]['timeMax'] = np.nanmax(dc['Time'])
-        coneData[j]['timeInt'] = float(ds.loc['SCAN TIME', 1])
-        coneData[j]['timeIgn'] = float(ds.loc['TIME TO IGN', 1]) # m2
-        coneData[j]['peakHRRPUA'] = cad_prop.loc['Peak HRRPUA (kW/m2)', namespace]
-        coneData[j]['timeToPeak'] = cad_prop.loc['Time to Peak HRRPUA (s)', namespace]
-        coneData[j]['HRRPUA, 60s average'] = cad_prop.loc['Average HRRPUA over 60 seconds (kW/m2)', namespace]
-        coneData[j]['HRRPUA, 180s average'] = cad_prop.loc['Average HRRPUA over 180 seconds (kW/m2)', namespace]
-        coneData[j]['HRRPUA, 300s average'] = cad_prop.loc['Average HRRPUA over 300 seconds (kW/m2)', namespace]
-        coneData[j]['HeatOfCombustion'] = cad_prop.loc['Avg. Effective Heat of Combustion (MJ/kg)', namespace]
-    
-    coneData = pd.DataFrame(coneData).T
-    
-    return coneData
-
-def timeAverageFsriConeData(coneData, flux, outInt):
-    times = coneData.loc[coneData['flux'] == flux, 'time'].values
-    hrrpuas = coneData.loc[coneData['flux'] == flux, 'hrrpua'].values
-    
-    tMax = np.max(coneData.loc[coneData['flux'] == flux, 'timeMax'].values)
-    dt = np.min(coneData.loc[coneData['flux'] == flux, 'timeInt'].values)
-    
-
-def importFsriMaterial(p, material, outInt, uniqueFluxes, filterWidth=11):
-    material_dict = dict()
-    tmp_prop = pd.read_csv(p+os.sep+material+'_Ignition_Temp_Properties.csv', header=None, index_col=0).T
-    
-    conductivity = tmp_prop['Thermal Conductivity (W/m-K)'].values[0]
-    heatCapacity = tmp_prop['Heat Capacity (J/kg-K)'].values[0]
-    density = tmp_prop['Density (kg/m3)'].values[0]
-    
-    material_dict['conductivity'] = conductivity
-    material_dict['heatCapacity'] = heatCapacity
-    material_dict['density'] = density
-    material_dict['directory'] = p
-    coneData = getConeData(material, p)
-    
-    #uniqueFluxes = np.unique(coneData['flux'].values)
-    fil = np.ones(filterWidth)/filterWidth
-    
-    for flux in uniqueFluxes:
-        outInt2 = outInt
-        dt = np.min(coneData.loc[coneData['flux'] == flux, 'timeInt'].values)
-        tMax = np.max(coneData.loc[coneData['flux'] == flux, 'timeMax'].values)
-        
-        thickness = np.median(coneData.loc[coneData['flux'] == flux, 'thickness'].values)
-        mass = np.median(coneData.loc[coneData['flux'] == flux, 'mass'].values)
-        area = np.median(coneData.loc[coneData['flux'] == flux, 'area'].values)
-        tign = np.median(coneData.loc[coneData['flux'] == flux, 'timeIgn'].values)
-        peakHRRPUA = np.median(coneData.loc[coneData['flux'] == flux, 'peakHRRPUA'].values)
-        timeToPeak = np.median(coneData.loc[coneData['flux'] == flux, 'timeToPeak'].values)
-        avg60s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 60s average'].values)
-        avg180s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 180s average'].values)
-        avg300s = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HRRPUA, 300s average'].values)
-        avgHoC = np.nanmedian(coneData.loc[coneData['flux'] == flux, 'HeatOfCombustion'].values)
-        
-        times = coneData.loc[coneData['flux'] == flux, 'time'].values
-        hrrpuas = coneData.loc[coneData['flux'] == flux, 'hrrpua'].values
-        
-        # Interpolate and filter raw data
-        time = np.linspace(0, tMax, int(tMax/dt)+1)
-        hrrpua = np.zeros_like(time)
-        hrrpuas_interp = np.zeros((time.shape[0], len(times)))
-        
-        filterWidth=41
-        fil = np.ones(filterWidth)/filterWidth
-        
-        for j in range(0, len(times)):
-            hrrpuas_interp[:, j] = np.convolve(np.interp(time, times[j], hrrpuas[j]), fil, mode='same')
-        
-        # Find time to ignitions
-        tIgns = []
-        for j in range(0, len(times)):
-            totalEnergy = np.trapz(hrrpuas_interp[:, j], time)
-            totalEnergy2 = 0
-            ind2 = 1
-            while totalEnergy2 < 0.0001 * totalEnergy:
-                ind2 = ind2 + 1
-                totalEnergy2 = np.trapz(hrrpuas_interp[:ind2, j], time[:ind2])
-            hrrpuas_interp[:, j] = np.interp(time, time, hrrpuas_interp[:, j])
-            tIgns.append(time[ind2-1])
-        tign = np.median(tIgns)
-        
-        # Average neglecting time to ignition
-        hrrpuas_interp_notign = np.zeros_like(hrrpuas_interp)
-        for j in range(0, len(times)):
-            hrrpuas_interp_notign[:, j] = np.interp(time, time-tIgns[j], hrrpuas_interp[:, j])
-        
-        hrrpua = np.mean(hrrpuas_interp_notign, axis=1)
-        
-        #_, times_trim, hrrpuas_trim = findLimits(time+tign,hrrpua, 0.001, 0.99)
-        
-        #times_trim = np.append(np.array([0, tign*0.9]), times_trim)
-        #hrrpuas_trim = np.append(np.array([0, 0]), hrrpuas_trim)
-        
-        #tMax = times_trim.max()+tign
-        #targetTimes, HRRs_interp = interpolateExperimentalData(times, HR
-        
-        
-        #hrrpua_mn = np.min(hrrpuas_interp_notign, axis=1)
-        #hrrpua_mx = np.max(hrrpuas_interp_notign, axis=1)
-        hrrpua_std = np.std(hrrpuas_interp_notign, axis=1)
-        
-        tMax = np.ceil((tMax-tign)/outInt2)*outInt2
-        outTime = np.linspace(0, tMax, int(tMax/outInt2)+1)
-        outHrrpua = np.interp(outTime, time, hrrpua)
-        
-        totalEnergy = np.trapz(hrrpua, time)
-        totalEnergy2 = np.trapz(outHrrpua, outTime)
-        
-        peakHrrpua2 = np.nanmax(outHrrpua)
-        peakHrrpua = np.nanmax(hrrpua)
-        
-        while abs(totalEnergy2 - totalEnergy)/totalEnergy > 0.00001 or abs(peakHrrpua2 - peakHrrpua)/peakHrrpua > 0.05:
-            print(abs(totalEnergy2 - totalEnergy)/totalEnergy)
-            outInt2 = outInt2*0.9
-            outTime = np.linspace(0, tMax, int(tMax/outInt2)+1)
-            outHrrpua = np.interp(outTime, time, hrrpua)
-            totalEnergy2 = np.trapz(outHrrpua, outTime)
-            peakHrrpua2 = np.nanmax(outHrrpua)
-            if outInt2 <= 0.1:
-                totalEnergy2 = totalEnergy
-        
-        outTime = np.append(np.array([0, tign*0.9]), outTime+tign)
-        outHrrpua = np.append(np.array([0, 0]), outHrrpua)
-        
-        material_dict[flux] = dict()
-        material_dict[flux]['time'] = outTime
-        material_dict[flux]['hrrpua'] = outHrrpua
-        material_dict[flux]['hrrpua_full_mean'] = hrrpua
-        material_dict[flux]['hrrpua_full_std'] = hrrpua_std
-        #material_dict[flux]['hrrpua_full_min'] = hrrpua_mn
-        #material_dict[flux]['hrrpua_full_max'] = hrrpua_mx
-        material_dict[flux]['time_full'] = time #-tign #-tStart
-        material_dict[flux]['tIgn'] = tign
-        material_dict[flux]['peakHRRPUA'] = peakHRRPUA
-        material_dict[flux]['timeToPeak'] = timeToPeak
-        material_dict[flux]['avg60s'] = avg60s
-        material_dict[flux]['avg180s'] = avg180s
-        material_dict[flux]['avg300s'] = avg300s
-        material_dict[flux]['thickness'] = thickness
-        material_dict[flux]['HeatOfCombustion'] = avgHoC
-        material_dict[flux]['hrrpuas_interp'] = hrrpuas_interp
-        material_dict[flux]['hrrpuas_interp_notign'] = hrrpuas_interp_notign
-        material_dict[flux]['time_interp'] = time
-        
-    return material_dict
-
-def checkMaterial(p, material, ignores):
-    files = glob.glob(p+os.sep+'cone_H*')
-    complete = True
-    #if os.path.exists(p+os.sep+'ignition_temp.csv') is False: complete = False
-    if os.path.exists(p+os.sep+material+'_Ignition_Temp_Properties.csv') is False: complete = False
-    if len(files) == 0: complete = False
-    if material in ignores: complete = False
-    return complete
-
-def importFsriDatabase(data_dir, outInt, Tinfty=300, ignores=['']):
-    material_directories = glob.glob(os.path.join(os.path.abspath(data_dir),'*'))
-    possible_materials = [d.split(os.sep)[-1] for d in material_directories]
-    
-    complete_materials = dict()
-    materials = []
-    for i in range(0, len(material_directories)):
-        p = os.path.abspath(material_directories[i])
-        check = checkMaterial(p, possible_materials[i], ignores)
-        if check: materials.append(possible_materials[i])
-    
-    uniqueFluxes = [25, 50, 75]
-    for i in range(0, len(materials)):
-        material = materials[i]
-        p = os.path.join(os.path.abspath(data_dir), material)
-        material_dict = importFsriMaterial(p, material, outInt, uniqueFluxes)
-        complete_materials[material] = material_dict
-        
-    return complete_materials
-
-def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
-    dt = np.nanmedian(times[1:]-times[:-1])
-    if filterWidth is not False:
-        filterWidth = int(filterWidth/dt)
-        fil = np.ones(filterWidth)/filterWidth
-        HRRs = np.convolve(HRRs, fil, mode='same')
-    
-    if targetDt is not False:
-        dt = targetDt
-    else:
-        dt = np.nanmedian(times[1:]-times[:-1])
-    tmax = np.round(times.max()/dt)*dt
-    tmin = np.round(times.min()/dt)*dt
-    targetTimes = np.linspace(tmin, tmax, int((tmax-tmin)/dt + 1))
-    HRRs = np.interp(targetTimes, times, HRRs)
-    
-    return targetTimes, HRRs
-
-def findLimits(times, HRRs, energyCutoff1, energyCutoff2):
-    v = np.cumsum(HRRs)
-    ind1 = 0 
-    while ind1 == 0:
-        try:
-            ind1 = np.where(v < np.nanmax(v)*energyCutoff1)[0][-1]
-        except:
-            energyCutoff1 = energyCutoff1*2
-            print(energyCutoff1)
-    ind2 = v.shape[0]
-    while ind2 == v.shape[0]:
-        try:
-            ind2 = np.where(v > np.nanmax(v)*energyCutoff2)[0][0]
-        except:
-            energyCutoff2 = energyCutoff2*0.99
-            print(energyCutoff2)
-    times_trimmed = times[ind1:ind2]
-    hrrs_trimmed = HRRs[ind1:ind2]
-    tign = times[ind1]
-    return tign, times_trimmed, hrrs_trimmed
+from algorithms import getMaterialClass
 
 if __name__ == "__main__":
     
@@ -297,6 +27,9 @@ if __name__ == "__main__":
                'RPPVC_EPR-16mm',
                'Solid_acrylic-12mm',
                ]
+    
+    warn_mass = False
+    warn_thickness = False
     
     material_database = defaultdict(bool)
     
@@ -342,14 +75,33 @@ if __name__ == "__main__":
             elif 'Product thickness (mm)' in scalarColumns:
                 thickness = scalars['Product thickness (mm)']
             else:
-                print("Warning no thickness found for %s"%(file))
+                if warn_thickness:
+                    print("Warning no thickness found for %s"%(file))
             
             if thickness == '':
-                print("Warning no thickness found for %s"%(file))
+                if warn_thickness:
+                    print("Warning no thickness found for %s"%(file))
                 thickness = 0.0127
             elif type(thickness) == str:
                 if '-' in thickness:
                     thickness = np.mean([float(x) for x in thickness.split('-')])
+            
+            if 'Specific extinction area (avg) (m2/kg)' in scalarColumns:
+                soot_yield = scalars['Specific extinction area (avg) (m2/kg)']
+                if type(soot_yield) == str:
+                    if (len(soot_yield) == 0) or (soot_yield in ['NA']):
+                        #print("Warning no SEA found for %s"%(file))
+                        soot_yield = -1
+                    else:
+                        print(file, soot_yield, len(soot_yield))
+                    #assert False, "Stopped"
+                else:
+                    soot_yield = soot_yield/8700
+                print(file, scalars['Specific extinction area (avg) (m2/kg)'], soot_yield)
+            else:
+                print("Warning no SEA found for %s"%(file))
+                print(scalarColumns)
+                soot_yield = -1
             
             HF = scalars['Flux (kW/m2)']
             tig = scalars['tig (s)']
@@ -367,7 +119,8 @@ if __name__ == "__main__":
                 if 'Sample mass (g)' in scalarColumns:
                     mass = scalars['Sample mass (g)']
                 else:
-                    print("Warning unable to find sample mass for %s"%(file))
+                    if warn_mass:
+                        print("Warning unable to find sample mass for %s"%(file))
                     if 'Mass loss (g)' in scalarColumns:
                         mass = scalars['Mass loss (g)']
                 if 'Area (m2)' in scalarColumns:
@@ -397,15 +150,11 @@ if __name__ == "__main__":
             material_dict['thickness'] = thickness
             material_dict['HeatOfCombustion'] = dHc
             material_dict['FYI'] = series
+            material_dict['SootYield'] = soot_yield
             
             tmp = txt.split('VectorData\n')[1].split('\n')
             while tmp[-1] == '': tmp = tmp[:-1]
-            '''
-            for t in tmp[1:]:
-                print(t)
-                tt = t.split(';')
-                v = [float(x) for x in tt]
-            '''
+            
             tmp2 = [[float(x) for x in y.split(';')] for y in tmp[1:] if (('Time' not in y) and (len(y.replace(';','')) > 0) and ('s' not in y)) ]
             hrrdata = np.array(tmp2)
             
@@ -444,6 +193,7 @@ if __name__ == "__main__":
     
     for material in materials:
         thicknesses = list(material_database[material].keys())
+        soot_yields = []
         for thickness in thicknesses:
             if type(thickness) is str: continue
             if thickness <= 0: continue
@@ -464,6 +214,9 @@ if __name__ == "__main__":
                         pass
                     else:
                         tigns.append(tign)
+                    soot_yield = material_database[material][thickness][flux][i]['SootYield']
+                    if soot_yield > 0:
+                        soot_yields.append(soot_yield)
                 if len(densities) == 0: continue
                 material_database[material][thickness][flux]['tign'] = np.mean(tign)
             if material_database_filtered[material] is False:
@@ -473,12 +226,24 @@ if __name__ == "__main__":
             material_database_filtered[material]['Density'].append(np.mean(densities))
             #print(material, len(fluxes), fluxes)
             #print(densities)
-    
+        
+        if material_database_filtered[material] is False:
+            material_database_filtered.pop(material)
+        else:
+            pass
+            if len(soot_yields) == 0:
+                print("Warning no soot yields found for material %s"%(material))
+                material_database_filtered[material]['SootYield'] = 0.05
+            else:
+                material_database_filtered[material]['SootYield'] = np.nanmean(soot_yields)
+                print("Soot yield %0.8f found for material %s"%(np.nanmean(soot_yields), material))
+        
     materials = list(material_database_filtered.keys())
     
     for material in materials:
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
+        thicknesses.remove('SootYield')
         for thickness in thicknesses:
             fluxes = list(material_database_filtered[material][thickness].keys())
             for flux in fluxes:
@@ -551,19 +316,23 @@ if __name__ == "__main__":
     inputFileDir = "../../../fds/Validation/Scaling_Pyrolysis/"
     expFileDir = "../../../exp/RISE_Materials/"
     emissivity = 1
-    txt = 'Code,Number,Series,Material,DataFile,ResultDir,InputFileDir,ExpFileDir,'
-    txt = txt + 'ReferenceExposure,ReferenceTime,ReferenceHRRPUA,'
+    txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
+    txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
+    txt = txt + 'CharFraction,HeatOfCombustion,SootYield,'
     txt = txt + 'IgnitionTemperature,IgnitionTemperatureBasis,HeaderRows,FYI'
     
     for material in materials:
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
+        thicknesses.remove('SootYield')
         for thickness in thicknesses:
             conductivity = 0.4 #material_database[material]['conductivity']
             specific_heat = 1. #material_database[material]['heatCapacity']
             density = np.mean(material_database[material]['Density'])
+            heat_of_combustion = np.mean(material_database[material]['HeatOfCombustion'])
+            soot_yield = np.mean(material_database[material]['SootYield'])
             
             fluxes = [x for x in list(material_database[material][thickness].keys()) if type(x) is float]
             fluxes.sort()
@@ -587,9 +356,10 @@ if __name__ == "__main__":
             else:
                 ind = np.argmin([abs(x-50) for x in fluxes])
                 refFlux = fluxes[ind]
-            
-            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, "RISE_Materials", mat, dataFiles, resultDir)
-            txt = txt + "%s,%s,%0.0f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, expFileDir, refFlux, mat, refFlux, mat, refFlux)
+            matClass = getMaterialClass(material)
+            if matClass == 'Unknown': code = 's'
+            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat, matClass, dataFiles, resultDir)
+            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, expFileDir, refFlux, thickness, mat, refFlux, mat, refFlux)
             
             for flux in fluxes:
                 txt = txt + '%s-%0.0f.csv-Time|'%(mat, flux)
@@ -601,6 +371,9 @@ if __name__ == "__main__":
                 txt = txt + '%0.0f|'%(flux)
             txt = txt[:-1] + ','
             txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,%0.8f,'%(density, conductivity, specific_heat, emissivity, thickness/1000)
+            
+            txt = txt + '%0.4f,%0.4f,%0.8f,'%(0, heat_of_combustion, soot_yield)
+            
             txt = txt + 'Calculate,'
             for flux in fluxes:
                 txt = txt + '%0.0f|'%(flux)
