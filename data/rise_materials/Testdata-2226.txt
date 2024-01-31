@@ -1,0 +1,10 @@
+Keywords
+Material1;Material2;Material3;Material4;Product;Object;Scenario;Method;Reference;Comment;Owner;IsPublic;ImportDate
+Aluminium Honey comb coated with HPL;;;;IN10A-1;Table;;ISO 5660;TRANSFEU;;TRANSFEU;1;2011-09-07 17:52:16
+Scalars
+Flux (kW/m2);tig (s);qmax (kw/m2);qtotal (MJ/m2);q180 (kw/m2);q300 (kw/m2);Sample mass (g);Mass loss (g);DHc (MJ/kg);Peak smoke production (m2/m2s);Total smoke produced (m2/m2);Specific extinction area (avg) (m2/kg);MARHE (kW/m2);Area exposed (m2);Observations;Test date (YYYY-MM-DD);Test identifier;Product thickness (mm);Thickness1 (mm);Thickness2 (mm);Thickness3 (mm);Thickness4 (mm);Product density (kg/m3);Density1 (kg/m3);Density2 (kg/m3);Density3 (kg/m3);Density4 (kg/m3);Product area weight (kg/m2);Area weight1 (kg/m2);Area weight2 (kg/m2);Area weight3 (kg/m2);Area weight4 (kg/m2)
+25;No ignition;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+VectorData
+Time (s);HRR (kW/m2)
+0;0
+0;0

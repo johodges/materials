@@ -1,0 +1,27 @@
+Keywords
+Material1;Material2;Material3;Material4;Product;Object;Scenario;Method;Reference;Comment;Owner;IsPublic;ImportDate
+FR EPS;Calcium silicate board;;;;;;ISO 5660;EUREFIC;CDK11310_EUREFIC11;;1;2003-08-06 09:35:17
+Scalars
+Flux (kW/m2);tig (s);qmax (kw/m2);qtotal (MJ/m2);q180 (kw/m2);q300 (kw/m2);Mass loss (g);DHc (MJ/kg);Peak smoke production (m2/m2s);Total smoke produced (m2/m2);Specific extinction area (avg) (m2/kg);Area (m2);Thickness (mm);Density (kg/m3)
+50;28;667;22;117;71;NA;25.3;NA;NA;1778;0.01;25;37
+VectorData
+Time (s);HRR (kW/m2);MLR (g/s);SEA (m2/kg)
+0; -2.02871; -0.0488182; 0
+5; -2.00729; -0.0680496; 0
+10; -2.00349; 0.0369835; 0
+15; 2.78792; 0.0192314; 0
+20; 45.7471; -0.00887629; 0
+25; 131.485; 0.0340263; 0
+30; 339.784; 0.081367; 1088.07
+35; 581.196; 0.115392; 1947.08
+40; 666.716; 0.149416; 2126.39
+45; 637.175; 0.198236; 1739.08
+50; 532.998; 0.230784; 1473.05
+55; 425.848; 0.202674; 1510.35
+60; 331.511; 0.119829; 2381.63
+65; 259.371; 0.0724909; 3299.12
+70; 176.48; 0.0769269; 3201.02
+75; 99.2221; 0.099117; 1693.97
+80; 53.7153; 0.113912; 664.237
+85; 29.8367; 0.0724909; 446.681
+90; 16.482; 0.0207123; 688.605

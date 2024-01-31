@@ -1,0 +1,13 @@
+Keywords
+Material1;Material2;Material3;Material4;Product;Object;Scenario;Method;Reference;Comment;Owner;IsPublic;ImportDate
+Mineral wool faced;Combustible face;;;;;;ISO 5660;EUREFIC;CDK07514_EUREFIC7;;1;2003-07-24 12:32:45
+Scalars
+Flux (kW/m2);tig (s);qmax (kw/m2);qtotal (MJ/m2);q180 (kw/m2);q300 (kw/m2);Mass loss (g);DHc (MJ/kg);Peak smoke production (m2/m2s);Total smoke produced (m2/m2);Specific extinction area (avg) (m2/kg);Area (m2);Thickness (mm);Density (kg/m3)
+25;16;28;0.4;NA;NA;NA;NA;NA;NA;NA;0.01;30;87
+VectorData
+Time (s);HRR (kW/m2);MLR (g/s);SEA (m2/kg)
+0; 0; -0.187892; 0
+5; 4.73702; 0.073969; 85.3167
+10; 18.9847; 0.0636119; -7013.38
+15; 28.3917; -2.54313e-006; 3560010
+20; 23.2587; 0.0177561; -1093.64

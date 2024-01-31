@@ -1,0 +1,28 @@
+Keywords
+Material1;Material2;Material3;Material4;Product;Object;Scenario;Method;Reference;Comment;Owner;IsPublic;ImportDate
+Plastic faced steel sheet;Mineral wool;;;;;;ISO 5660;EUREFIC;CS000037_EUREFIC5;;1;2003-08-06 09:02:57
+Scalars
+Flux (kW/m2);tig (s);qmax (kw/m2);qtotal (MJ/m2);q180 (kw/m2);q300 (kw/m2);Mass loss (g);DHc (MJ/kg);Peak smoke production (m2/m2s);Total smoke produced (m2/m2);Specific extinction area (avg) (m2/kg);Area (m2);Thickness (mm);Density (kg/m3)
+50;34;72;3.3;18;NA;3.2;10.3;NA;NA;248;0.01;25;640
+VectorData
+Time (s);HRR (kW/m2);MLR (g/s);SEA (m2/kg)
+1.26; -0.164; -0.2373; -3.0593
+3.258; 0.5949; -0.0824; -186.517
+5.718; -0.0565; -0.0214; -206.152
+7.956; -0.298; -0.0004; -190.59
+9.996; -0.4302; -0.0026; -177.398
+12; -1.0803; 0.0041; -75.2859
+13.998; -0.9587; 0.0068; 137.346
+16.5; -0.2734; 0.0014; 187.115
+18.498; -0.1035; 0.0072; 194.169
+20.496; -0.2; 0.0116; 197.955
+22.5; -1.4417; 0.0251; 110.44
+24.516; -0.1545; 0.0494; 249.996
+27.036; 11.3161; 0.0831; 449.873
+29.298; 14.3759; 0.1128; 636.553
+31.32; 8.7976; 0.1261; 890.946
+33.318; 27.6083; 0.119; 1104.99
+35.316; 61.0866; 0.0933; 1171.47
+37.8; 71.4656; 0.0674; 1161.08
+39.78; 58.0871; 0.0323; 1179.17
+41.778; 37.0078; 0.0179; 1004.19
