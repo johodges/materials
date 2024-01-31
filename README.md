@@ -9,16 +9,16 @@ This repository contains the data, scripts, and technical documents required to 
   ```
 * Pre-process data
   ```
-  cd materials/scripts
-  python initialize.py
-  cd ../..
+  python materials/scripts/initialize.py
   ```
 * Build latest FDS (example for impi_intel_linux target, but use relevant make target for platform)
+  ```
   git clone git@github.com:firemodels/fds.git && cd fds
   cd Build/impi_intel_linux
   ./make_fds.sh
   ln -s fds_impi_intel_linux fds
   cd ../..
+  ```
 * Run cases
   ```
   cd materials/scripts
