@@ -131,7 +131,7 @@ if __name__ == "__main__":
     axmins = [0.0, 1e1, 1e1, 1e1, 1e1, 1e1]
     axmaxs = [2500, 1e4, 1e4, 1e4, 1e4, 1e4]
     
-    for ii in range(0, len(metrics)): 
+    for ii in range(0, 1): #len(metrics)): 
         metric = metrics[ii]
         label = metricLabels[ii]
         loglog = logs[ii]
@@ -149,6 +149,7 @@ if __name__ == "__main__":
         c = []
         mask = []
         bases = []
+        range_type = []
         for material in materials:
             matClass = spec_file_dict[material]['materialClass']
             for case in list(output_statistics[material].keys()):
@@ -161,6 +162,20 @@ if __name__ == "__main__":
                     m.append(material)
                     mc.append(matClass)
                     c.append(output_statistics[material][case]['coneExposure'])
+                    cases = list(output_statistics[material].keys())
+                    cases.remove(case)
+                    refs = [c for c in cases if output_statistics[material][c]['delta'] == output_statistics[material][case]['delta']]
+                    if len(refs) > 0:
+                        ref_fluxes = [output_statistics[material][c]['coneExposure'] for c in refs]
+                        flux = output_statistics[material][case]['coneExposure']
+                        if flux < np.min(ref_fluxes):
+                            range_type.append(1) # Extrapolate Down
+                        elif flux > np.max(ref_fluxes):
+                            range_type.append(2) # Extrapolate Up
+                        else:
+                            range_type.append(3) # Interpolate
+                    else:
+                        range_type.append(4) # Thickness
         mask = [x is False for x in bases]
         exp_points = np.array(exp_points)
         mod_points = np.array(mod_points)
@@ -170,6 +185,7 @@ if __name__ == "__main__":
         c = np.array(c)
         ddd = np.array(ddd)
         mask = np.array(mask)
+        range_type = np.array(range_type)
         bias, sigma_m, sigma_e, points = calculateUncertainty(exp_points[mask], mod_points[mask])
         metric_outputs[metric]['bias'] = bias
         metric_outputs[metric]['sigma_m'] = sigma_m
@@ -187,7 +203,7 @@ if __name__ == "__main__":
         for iiii in range(0, 10):
             print(worst_pts[iiii], worst_mats[iiii], worst_ddd[iiii], worst_c[iiii])
         print(metric)
-        for uncertaintyStatistic in ['delta', 'exposure', 'materialClass']: # material
+        for uncertaintyStatistic in ['rangeType']: #['delta', 'exposure', 'materialClass', 'rangeType']: # material
             if uncertaintyStatistic == 'delta':
                 split = ddd
                 for iii in range(0, len(m)):
@@ -233,6 +249,11 @@ if __name__ == "__main__":
                 #labelNames = {25 : "$\mathrm{q_{cone}'' ~25 kW/m^{2}}$", 50 : "$\mathrm{q_{cone}'' ~50 kW/m^{2}}$", 75 : "$\mathrm{q_{cone}'' ~75 kW/m^{2}}$"}
                 labelNames = {-1 : r"$\mathrm{q_{cone}''}$ < $\mathrm{q_{ref}''}$", 0.1 : r"$\mathrm{q_{cone}''}$ = $\mathrm{q_{ref}''}$", 1 : r"$\mathrm{q_{cone}''}$ > $\mathrm{q_{ref}''}$"}
                 fname = 'uncertainty_statistics_exposure_%s.png'%(metric)
+            elif uncertaintyStatistic == 'rangeType':
+                split = range_type
+                diff2 = range_type
+                labelNames = {1: 'Extrapolate Down', 2: 'Extrapolate Up', 3: 'Interpolate', 4: 'Thickness'}
+                fname = 'uncertainty_statistics_rangeType_%s.png'%(metric)
             
             fig, sigma_m, delta = plotMaterialExtraction(exp_points, mod_points, split, label, diff=diff2, axmin=axmin, axmax=axmax, loglog=loglog, labelName=labelNames, mask=mask)
             delta, sigma_m, sigma_e, num_points, points = calculateUncertaintyBounds(exp_points, mod_points, split, split=True)
@@ -242,7 +263,7 @@ if __name__ == "__main__":
             metric_outputs[metric][uncertaintyStatistic]['sigma_m'] = sigma_m
             
             for key in list(delta.keys()):
-                print('%s & %0.2f & %0.2f'%(key, delta[key], sigma_m[key]))
+                print('%s & %0.2f & %0.2f & %0.2f'%(labelNames[key], num_points[key], delta[key], sigma_m[key]))
             plt.savefig('../figures/'+fname, dpi=300)
         detailed_output = pd.DataFrame(np.array([mc, m, ddd, c, exp_points, mod_points]).T, columns=['Class','Material','Thickness','Exposure','Exp','Mod'])
         detailed_output.to_csv('../output/output_%s.csv'%(metric))
