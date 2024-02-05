@@ -131,7 +131,7 @@ if __name__ == "__main__":
     axmins = [0.0, 1e1, 1e1, 1e1, 1e1, 1e1]
     axmaxs = [2500, 1e4, 1e4, 1e4, 1e4, 1e4]
     
-    for ii in range(0, 1): #len(metrics)): 
+    for ii in range(0, len(metrics)): 
         metric = metrics[ii]
         label = metricLabels[ii]
         loglog = logs[ii]
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         for iiii in range(0, 10):
             print(worst_pts[iiii], worst_mats[iiii], worst_ddd[iiii], worst_c[iiii])
         print(metric)
-        for uncertaintyStatistic in ['rangeType']: #['delta', 'exposure', 'materialClass', 'rangeType']: # material
+        for uncertaintyStatistic in ['delta', 'exposure', 'materialClass', 'rangeType']: # material
             if uncertaintyStatistic == 'delta':
                 split = ddd
                 for iii in range(0, len(m)):
