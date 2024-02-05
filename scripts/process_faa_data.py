@@ -170,11 +170,61 @@ def getMaterial(material, style='md_lmhf'):
         if ('l' in fluxes) and ('h' in thicknesses): case_basis.append('27-23')
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
+    elif material == 'PEEK':
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','peek.csv')
+        density = 1300
+        conductivity = 0.28
+        specific_heat = 2.05
+        heat_of_combustion = 22.82 # 16*0.38 + 27*0.62
+        emissivity = 0.90
+        nu_char = 0.0
+        soot_yield = 0.02 # FDS Validation guide
+        data = pd.read_csv(referenceCurve)
+        cases = {
+                 '4-50': {'Time' : 'Time_4_50', 'HRR' : 'HRR_4_50', 'delta' : 3.9, 'cone' : 50},
+                 '4-70': {'Time' : 'Time_4_70', 'HRR' : 'HRR_4_70', 'delta' : 3.9, 'cone' : 70},
+                 '4-90': {'Time' : 'Time_4_90', 'HRR' : 'HRR_4_90', 'delta' : 3.9, 'cone' : 90},
+                 }
+        case_basis = ['4-70']
+    elif material == 'PBT':
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pbt.csv')
+        density = 1300
+        conductivity = 0.29
+        specific_heat = 2.23
+        heat_of_combustion = 19.5 # 16*0.38 + 27*0.62
+        emissivity = 0.88
+        nu_char = 0.0
+        soot_yield = 0.02 # FDS Validation guide
+        data = pd.read_csv(referenceCurve)
+        cases = {
+                 '4-35': {'Time' : 'Time_4_35', 'HRR' : 'HRR_4_35', 'delta' : 4.0, 'cone' : 35},
+                 '4-50': {'Time' : 'Time_4_50', 'HRR' : 'HRR_4_50', 'delta' : 4.0, 'cone' : 50},
+                 '4-70': {'Time' : 'Time_4_70', 'HRR' : 'HRR_4_70', 'delta' : 4.0, 'cone' : 70},
+                 }
+        case_basis = ['4-50']
+    elif material == 'PBTGF':
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pbtgf.csv')
+        density = 1520
+        conductivity = 0.36
+        specific_heat = 1.68
+        heat_of_combustion = 19.5 # 16*0.38 + 27*0.62
+        emissivity = 0.87
+        nu_char = 0.32
+        soot_yield = 0.02 # FDS Validation guide
+        data = pd.read_csv(referenceCurve)
+        cases = {
+                 '4-35': {'Time' : 'Time_4_35', 'HRR' : 'HRR_4_35', 'delta' : 4.0, 'cone' : 35},
+                 '4-50': {'Time' : 'Time_4_50', 'HRR' : 'HRR_4_50', 'delta' : 4.0, 'cone' : 50},
+                 '4-70': {'Time' : 'Time_4_70', 'HRR' : 'HRR_4_70', 'delta' : 4.0, 'cone' : 70},
+                 }
+        case_basis = ['4-50']
     for c in list(cases.keys()):
         cases[c]['File'] = referenceCurve
     return density, conductivity, specific_heat, heat_of_combustion, soot_yield, emissivity, nu_char, data, cases, case_basis
 
 def getPlotLimits(material):
+    xlim = 1000
+    ylim = 300
     if material == 'PVC':
         xlim = 1000
         ylim = 300
@@ -228,7 +278,7 @@ if __name__ == "__main__":
     # Compare normalization schemes on model predictions
     style = 'md_mf'
     nondimtype = 'FoBi'
-    materials = ['PC','PVC', 'PMMA', 'HIPS', 'HDPE']
+    materials = ['PC','PVC', 'PMMA', 'HIPS', 'HDPE', 'PEEK','PBT','PBTGF']
     
     resultDir = ""
     inputFileDir = ""
