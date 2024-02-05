@@ -203,7 +203,7 @@ if __name__ == "__main__":
         for iiii in range(0, 10):
             print(worst_pts[iiii], worst_mats[iiii], worst_ddd[iiii], worst_c[iiii])
         print(metric)
-        for uncertaintyStatistic in ['delta', 'exposure', 'materialClass', 'rangeType']: # material
+        for uncertaintyStatistic in ['delta', 'exposure', 'rangeType', 'materialClass']: # material
             if uncertaintyStatistic == 'delta':
                 split = ddd
                 for iii in range(0, len(m)):
@@ -274,7 +274,7 @@ if __name__ == "__main__":
             for v in ['bias', 'sigma_m']:
                 tosave[key+'-'+v] = dict()
                 tosave[key+'-'+v]['Mixtures'] = metric_outputs[key]['materialClass'][v]['Mixtures']
-                tosave[key+'-'+v]['Others'] = metric_outputs[key]['materialClass'][v]['Others']
+                #tosave[key+'-'+v]['Others'] = metric_outputs[key]['materialClass'][v]['Others']
                 tosave[key+'-'+v]['Polymers'] = metric_outputs[key]['materialClass'][v]['Polymers']
                 tosave[key+'-'+v]['Wood-Based'] = metric_outputs[key]['materialClass'][v]['Wood-Based']
                 tosave[key+'-'+v]['cone < ref'] = metric_outputs[key]['exposure'][v][-1]
