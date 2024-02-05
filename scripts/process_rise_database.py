@@ -200,6 +200,7 @@ if __name__ == "__main__":
             fluxes = list(material_database[material][thickness].keys())
             if len(fluxes) < 2: continue
             densities = []
+            HoCs = []
             for flux in fluxes:
                 tigns = []
                 testCount = material_database[material][thickness][flux]['testCount']
@@ -217,13 +218,20 @@ if __name__ == "__main__":
                     soot_yield = material_database[material][thickness][flux][i]['SootYield']
                     if soot_yield > 0:
                         soot_yields.append(soot_yield)
+                    HoC = material_database[material][thickness][flux][i]['HeatOfCombustion']
+                    if type(HoC) == str:
+                        pass
+                    else:
+                        HoCs.append(HoC)
                 if len(densities) == 0: continue
                 material_database[material][thickness][flux]['tign'] = np.mean(tign)
             if material_database_filtered[material] is False:
                 material_database_filtered[material] = defaultdict(bool)
                 material_database_filtered[material]['Density'] = []
+                material_database_filtered[material]['HeatOfCombustion'] = []
             material_database_filtered[material][thickness] = material_database[material][thickness]
             material_database_filtered[material]['Density'].append(np.mean(densities))
+            material_database_filtered[material]['HeatOfCombustion'].append(np.mean(HoCs))
             #print(material, len(fluxes), fluxes)
             #print(densities)
         
@@ -244,6 +252,7 @@ if __name__ == "__main__":
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
         thicknesses.remove('SootYield')
+        thicknesses.remove('HeatOfCombustion')
         for thickness in thicknesses:
             fluxes = list(material_database_filtered[material][thickness].keys())
             for flux in fluxes:
@@ -327,6 +336,7 @@ if __name__ == "__main__":
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
         thicknesses.remove('SootYield')
+        thicknesses.remove('HeatOfCombustion')
         for thickness in thicknesses:
             conductivity = 0.4 #material_database[material]['conductivity']
             specific_heat = 1. #material_database[material]['heatCapacity']
