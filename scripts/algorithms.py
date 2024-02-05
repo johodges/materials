@@ -80,6 +80,8 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
     conductivity = properties['conductivity']
     emissivity = properties['emissivity']
     specific_heat = properties['specific_heat']
+    soot_yield = properties['soot_yield']
+    heat_of_combustion = properties['heat_of_combustion']
     
     tempOutput = '.TRUE.' if outputTemperature else '.FALSE.'
     DT_DEVC = devc_dt
@@ -92,7 +94,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
     txt = txt+"&DUMP DT_CTRL=%0.1f, DT_DEVC=%0.1f, DT_HRR=%0.1f, SIG_FIGS=4, SIG_FIGS_EXP=2, /\n"%(DT_DEVC, DT_DEVC, DT_DEVC)
     txt = txt+"&MISC SOLID_PHASE_ONLY=.TRUE., TMPA=27., /\n"
     txt = txt+"&MESH ID='MESH', IJK=3,3,3, XB=0.,0.3,0.,0.3,0.,0.3, /\n"
-    txt = txt+"&REAC ID='PROPANE', FUEL='PROPANE', /\n"
+    txt = txt+"&REAC ID='PROPANE', FUEL='PROPANE', HEAT_OF_COMBUSTION=%0.1f, SOOT_YIELD=%0.8f /\n"%(heat_of_combustion*1e3, soot_yield)
     txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.10, DENSITY=65., EMISSIVITY=0.9, SPECIFIC_HEAT=1.14, /\n"
     #txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.2, DENSITY=585., EMISSIVITY=1., SPECIFIC_HEAT=0.8, /\n"
     txt = txt+"&MATL ID='SAMPLE', CONDUCTIVITY=%0.4f, DENSITY=%0.1f, EMISSIVITY=%0.4f, SPECIFIC_HEAT=%0.4f, /\n"%(conductivity, density, emissivity, specific_heat)
@@ -540,6 +542,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             #preprocess = specificationFile.iloc[i]['Preprocess']
             nu_char = specificationFile.iloc[i]['CharFraction']
             heat_of_combustion = specificationFile.iloc[i]['HeatOfCombustion']
+            soot_yield = specificationFile.iloc[i]['SootYield']
             materialClass = specificationFile.iloc[i]['MaterialClass']
             
             #resultDir = specificationFile.iloc[i]['ResultDir'].replace('\\\\','\\').replace('"','')
@@ -643,7 +646,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
                 case_basis[casename] = {'Time': referenceTimeColumns[ii], 'HRR': referenceHrrpuaColumns[ii], 'delta': referenceThicknesses[ii], 'cone': referenceExposures[ii], 'case': casename}
         
             spec_file_dict[m] = {'density': density, 'conductivity': conductivity, 'specific_heat': specific_heat,
-                                        'heat_of_combustion': heat_of_combustion, 'emissivity': emissivity, 'nu_char': nu_char,
+                                        'heat_of_combustion': heat_of_combustion, 'soot_yield': soot_yield, 'emissivity': emissivity, 'nu_char': nu_char,
                                         'data': exp_data, 'cases': cases, 'case_basis': case_basis, 
                                         'material': m, 'materialClass': materialClass}
     return spec_file_dict
@@ -741,7 +744,7 @@ def getMaterialClass(material):
     for w in woods:
         if w in m: materialClass = 'Wood-Based'
     
-    polymers = ['acrylic','hdpe','hips','ldpe','nylon','pc','pp','pvc','pmma','pet','plastic','polycarbonate','polyester','polyolefin','pvdf',
+    polymers = ['acrylic','hdpe','hips','ldpe','nylon','pc','pp','pvc','pmma','peek','pet','plastic','polycarbonate','polyester','polyolefin','pvdf',
                 'vinyl']
     for p in polymers:
         if p in m: materialClass = 'Polymers'
