@@ -47,6 +47,9 @@ if __name__ == "__main__":
         if os.path.isabs(inputfile_dir) is False:
             inputfile_dir = os.path.join(systemPath, inputfile_dir)
     
+    outdir = os.path.join(systemPath,'..','output')
+    figdir = os.path.join(systemPath,'..','figures')
+    
     # Initialize variables
     fs=16
     lw = 3
@@ -288,11 +291,11 @@ if __name__ == "__main__":
             
             for key in list(delta.keys()):
                 print('%s & %0.2f & %0.2f & %0.2f'%(labelNames[key], num_points[key], delta[key], sigma_m[key]))
-            plt.savefig('../figures/'+fname, dpi=300)
+            plt.savefig(os.path.join(figdir, fname), dpi=300)
         detailed_output = pd.DataFrame(np.array([mc, m, ddd, c, exp_points, mod_points]).T, columns=['Class','Material','Thickness','Exposure','Exp','Mod'])
-        detailed_output.to_csv('../output/output_%s.csv'%(metric))
+        detailed_output.to_csv(os.path.join(outdir, 'output_%s.csv'%(metric)))
 
-    with pd.ExcelWriter('../figures/metrics_output.xlsx') as writer:
+    with pd.ExcelWriter(os.path.join(figdir,'metrics_output.xlsx')) as writer:
         tosave = dict()
         for key in list(metric_outputs.keys()):
             for v in ['bias', 'sigma_m']:

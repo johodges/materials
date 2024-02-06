@@ -604,7 +604,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             dataFile = specificationFile.iloc[i]['DataFile'].replace('\\\\','\\').replace('"','')
             headerRows = specificationFile.iloc[i]['HeaderRows']
             if '|' in dataFile:
-                dfs = dataFile.split('|')
+                dfs = [dataDirectory+os.sep+x for x in dataFile.split('|')]
                 hrs = headerRows.split('|')
                 exp_data = dict()
                 for df, hr in zip(dfs, hrs):
@@ -627,7 +627,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             else:
                 headerRows = int(headerRows)
                 # Read data file, manually due to differing number of header rows
-                with open(dataFile, 'r') as f:
+                with open(dataDirectory+os.sep+dataFile, 'r') as f:
                     d = f.readlines()
                 d = np.array([dd.replace('\n','').split(',') for dd in d])
                 
