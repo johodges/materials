@@ -10,7 +10,6 @@ if __name__ == "__main__":
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','rise_materials')+os.sep
     out_dir = os.path.join(systemPath,'..','data','rise_materials_processed')+os.sep
-    out_dir_spec = 'rise_materials_processed' + os.sep
     
     try:
         os.mkdir(out_dir)
@@ -180,6 +179,9 @@ if __name__ == "__main__":
             if material_database[matind][thickness][HF] is False:
                 material_database[matind][thickness][HF] = defaultdict(bool)
                 material_database[matind][thickness][HF]['testCount'] = 0
+                material_database[matind][thickness][HF]['testNumber'] = file.split('-')[1]
+            else:
+                material_database[matind][thickness][HF]['testNumber'] = material_database[matind][thickness][HF]['testNumber'] + ' AND ' + file.split('-')[1]
             
             testCount = material_database[matind][thickness][HF]['testCount'] + 1
             material_database[matind][thickness][HF]['testCount'] = testCount
@@ -201,7 +203,6 @@ if __name__ == "__main__":
             fluxes = list(material_database[material][thickness].keys())
             if len(fluxes) < 2: continue
             densities = []
-            HoCs = []
             for flux in fluxes:
                 tigns = []
                 testCount = material_database[material][thickness][flux]['testCount']
@@ -219,20 +220,13 @@ if __name__ == "__main__":
                     soot_yield = material_database[material][thickness][flux][i]['SootYield']
                     if soot_yield > 0:
                         soot_yields.append(soot_yield)
-                    HoC = material_database[material][thickness][flux][i]['HeatOfCombustion']
-                    if type(HoC) == str:
-                        pass
-                    else:
-                        HoCs.append(HoC)
                 if len(densities) == 0: continue
                 material_database[material][thickness][flux]['tign'] = np.mean(tign)
             if material_database_filtered[material] is False:
                 material_database_filtered[material] = defaultdict(bool)
                 material_database_filtered[material]['Density'] = []
-                material_database_filtered[material]['HeatOfCombustion'] = []
             material_database_filtered[material][thickness] = material_database[material][thickness]
             material_database_filtered[material]['Density'].append(np.mean(densities))
-            material_database_filtered[material]['HeatOfCombustion'].append(np.mean(HoCs))
             #print(material, len(fluxes), fluxes)
             #print(densities)
         
@@ -253,7 +247,6 @@ if __name__ == "__main__":
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
         thicknesses.remove('SootYield')
-        thicknesses.remove('HeatOfCombustion')
         for thickness in thicknesses:
             fluxes = list(material_database_filtered[material][thickness].keys())
             for flux in fluxes:
@@ -337,7 +330,6 @@ if __name__ == "__main__":
         thicknesses = list(material_database_filtered[material].keys())
         thicknesses.remove('Density')
         thicknesses.remove('SootYield')
-        thicknesses.remove('HeatOfCombustion')
         for thickness in thicknesses:
             conductivity = 0.4 #material_database[material]['conductivity']
             specific_heat = 1. #material_database[material]['heatCapacity']
@@ -358,7 +350,7 @@ if __name__ == "__main__":
             
             dataFiles = ''
             for flux in fluxes:
-                dataFile = out_dir_spec+ '%s-%02d.csv'%(mat, flux)
+                dataFile = os.path.join(out_dir, '%s-%02d.csv'%(mat, flux))
                 dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
@@ -377,7 +369,7 @@ if __name__ == "__main__":
                 tmp[long_ind] = tmp[long_ind][:-1]
                 mat_name = '_'.join(tmp)
             txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat_name, matClass, dataFiles, resultDir)
-            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat, refFlux, mat, refFlux)
+            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir, refFlux, thickness, mat, refFlux, mat, refFlux)
             
             for flux in fluxes:
                 txt = txt + '%s-%0.0f.csv-Time|'%(mat, flux)
@@ -403,6 +395,49 @@ if __name__ == "__main__":
             
     with open(os.path.join(systemPath,'..','data','rise_spec_file.csv'), 'w') as f:
         f.write(txt)
-
+        
+    import matplotlib.pyplot as plt
+    fs = 16
+    lw=3
+    for material in materials:
+        thicknesses = list(material_database_filtered[material].keys())
+        thicknesses.remove('Density')
+        thicknesses.remove('SootYield')
+        thicknesses.remove('HeatOfCombustion')
+        fluxes = []
+        for thickness in thicknesses:
+            fluxes.extend(list(material_database_filtered[material][thickness].keys()))
+        
+        fluxes = sorted(list(set(fluxes)))
+        
+        for flux in fluxes:
+            plt.figure(figsize=(12,12))
+            plt.title('Material %s Flux %0.0f'%(material, flux), fontsize=fs)
+            n_curves = 0
+            n_files = ''
+            for thickness in sorted(thicknesses):
+                conductivity = 0.4 #material_database[material]['conductivity']
+                specific_heat = 1. #material_database[material]['heatCapacity']
+                density = np.mean(material_database[material]['Density'])
+                heat_of_combustion = np.mean(material_database[material]['HeatOfCombustion'])
+                soot_yield = np.mean(material_database[material]['SootYield'])
+                
+                thickness_fluxes = [x for x in list(material_database[material][thickness].keys()) if type(x) is float]
+                
+                if flux in thickness_fluxes:
+                    #print("Thickness %0.8f has flux %0.8f"%(thickness, flux))
+                    t = material_database[material][thickness][flux]['time']
+                    hrrpua = material_database[material][thickness][flux]['hrrpua']
+                    plt.plot(t, hrrpua, label='%0.1f mm'%(thickness), linewidth=lw)
+                    n_curves = n_curves + 1
+                    n_files = n_files + 'AND' + material_database[material][thickness][flux]['testNumber']
+            plt.tick_params(labelsize=fs)
+            plt.xlabel('Time (s)', fontsize=fs)
+            plt.ylabel('HRRPUA (kW/m2)', fontsize=fs)
+            plt.legend(fontsize=fs)
+            if n_curves > 1:
+                plt.savefig('%s_%0.0f'%(material, flux), dpi=300)
+                print('Material %s Flux %0.0f has %0d curves, %s'%(material, flux, n_curves, n_files))
+            plt.close()
     
     

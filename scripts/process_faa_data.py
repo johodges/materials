@@ -219,7 +219,10 @@ def getMaterial(material, style='md_lmhf'):
                  }
         case_basis = ['4-50']
     for c in list(cases.keys()):
-        cases[c]['File'] = referenceCurve
+        fname = referenceCurve.split('data')[1]
+        while fname[0] == os.sep:
+            fname = fname[1:]
+        cases[c]['File'] = fname
     return density, conductivity, specific_heat, heat_of_combustion, soot_yield, emissivity, nu_char, data, cases, case_basis
 
 def getPlotLimits(material):
@@ -274,6 +277,7 @@ def processCaseData_old(material, style='md_lmhf', save_csv=False):
 if __name__ == "__main__":
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','faa_materials')+os.sep
+    dataout_dir = 'faa_materials_processed' + os.sep
     
     # Compare normalization schemes on model predictions
     style = 'md_mf'
@@ -316,6 +320,7 @@ if __name__ == "__main__":
         fluxes = [cases[c]['cone'] for c in caseNames]
         thicknesses = [cases[c]['delta'] for c in caseNames]
         case_files = [cases[c]['File'] for c in caseNames]
+        
         ones = [1 for c in caseNames]
         
         reference_flux = cases[case_basis[0]]['cone']
@@ -323,7 +328,7 @@ if __name__ == "__main__":
         reference_time = cases[case_basis[0]]['Time']
         reference_hrr = cases[case_basis[0]]['HRR']
         
-        dataFiles = [os.path.abspath(f) for f in list(set(case_files))]
+        dataFiles = [f for f in list(set(case_files))]
         
         dataFiles_txt = '|'.join(dataFiles)
         
@@ -342,7 +347,7 @@ if __name__ == "__main__":
             
             thickness_txt = '%s%0.8f|'%(thickness_txt, thicknesses[i]/1000)
             
-            dataFile = os.path.join(data_dir,'faa_materials_processed','scaling_pyrolysis','%s-%02d.csv'%(mat, fluxes[i]))
+            dataFile = dataout_dir+'%s-%02d.csv'%(mat, fluxes[i])
             dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             

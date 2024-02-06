@@ -262,13 +262,14 @@ def checkForFloat(string):
 if __name__ == "__main__":
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','fpl_materials')+os.sep
+    dataout_dir = os.path.join(systemPath,'..','data','fpl_materials_processed')+os.sep
     material_database = importFplDatabase(data_dir, 15)
     
     import matplotlib.pyplot as plt
     
     resultDir = ""
     inputFileDir = ""
-    expFileDir = os.path.join(systemPath,'..','data','fpl_materials_processed')+os.sep
+    expFileDir = 'fpl_materials_processed'+os.sep
     emissivity = 1
     txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
@@ -295,7 +296,7 @@ if __name__ == "__main__":
         mat = 'FPL_%s'%(material)
         dataFiles = ''
         for flux in fluxes:
-            dataFile = os.path.join(expFileDir, '%s-%02d.csv'%(mat, flux))
+            dataFile = 'fpl_materials_processed' + os.sep + '%s-%02d.csv'%(mat, flux)
             dataFiles = dataFiles + dataFile + '|'
         dataFiles = dataFiles[:-1]
         
@@ -335,7 +336,7 @@ if __name__ == "__main__":
             #out_hrrpuas[out_times < tign] = 0
             d = pd.DataFrame(np.array([out_times, out_hrrpuas]).T, columns=['Time','HRRPUA'])
             #dataFile = os.path.abspath('fpl_materials//%s-%02d.csv'%(mat, flux))
-            dataFile = os.path.join(expFileDir,'%s-%02d.csv'%(mat, flux))
+            dataFile = os.path.join(dataout_dir,'%s-%02d.csv'%(mat, flux))
             d.to_csv(dataFile, index=False)
     with open(os.path.join(systemPath,'..','data','fpl_spec_file.csv'),'w') as f:
         f.write(txt)

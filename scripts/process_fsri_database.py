@@ -297,6 +297,7 @@ if __name__ == "__main__":
     
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','fsri_materials_processed')+os.sep
+    dataout_dir = 'fsri_materials_processed' + os.sep
     material_database = importFsriDatabase(data_dir, 15)
     
     resultDir = data_dir
@@ -326,7 +327,7 @@ if __name__ == "__main__":
         mat = 'FSRI_%s'%(material)
         dataFiles = ''
         for flux in fluxes:
-            dataFile = os.path.join(data_dir,'scaling_pyrolysis','%s-%02d.csv'%(mat, flux))
+            dataFile = os.path.join(dataout_dir,'scaling_pyrolysis','%s-%02d.csv'%(mat, flux))
             dataFiles = dataFiles + dataFile + '|'
         dataFiles = dataFiles[:-1]
         
