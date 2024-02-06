@@ -23,6 +23,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('call')
     parser.add_argument('--clean', action='store_true', help='Deletes processed data and outputs prior to run')
+    parser.add_argument('--donotrun', action='store_true', help='Does not run fds on generated input files')
     parser.add_argument('--inputfiles', nargs=1, default=[], help='Directory of fds input files to store')
     
     cmdargs = parser.parse_args(args)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     lw = 3
     windowSize = 60
     percentile = 90
-    runSimulations = True
+    runSimulations = cmdargs.donotrun is False
     colors = getJHcolors()
     
     # Read data
