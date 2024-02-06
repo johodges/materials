@@ -18,7 +18,7 @@ def getMaterial(material, style='md_lmhf'):
     fluxes = style.split('_')[1]
     
     if material == 'PC':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','PC.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_pc.csv')
         density = 1180.0
         conductivity = 0.22 
         specific_heat = 1.9
@@ -49,7 +49,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('h' in fluxes) and ('h' in thicknesses): pass
     
     elif material == 'PVC':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','PVC.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_pvc.csv')
         density = 1430.0
         conductivity = 0.17 
         specific_heat = 1.55
@@ -78,7 +78,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('9-75')
         if ('h' in fluxes) and ('h' in thicknesses): pass
     elif material == 'PMMA':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pmma.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_pmma.csv')
         density = 1100
         conductivity = 0.20
         specific_heat = 2.2
@@ -109,7 +109,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HIPS':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','hips.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_hips.csv')
         density = 950
         conductivity = 0.22
         specific_heat = 2.0
@@ -140,7 +140,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'HDPE':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','hdpe.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_hdpe.csv')
         density = 860
         conductivity = 0.29
         specific_heat = 3.5
@@ -171,7 +171,7 @@ def getMaterial(material, style='md_lmhf'):
         if ('m' in fluxes) and ('h' in thicknesses): case_basis.append('27-46')
         if ('h' in fluxes) and ('h' in thicknesses): case_basis.append('27-69')
     elif material == 'PEEK':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','peek.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_peek.csv')
         density = 1300
         conductivity = 0.28
         specific_heat = 2.05
@@ -187,7 +187,7 @@ def getMaterial(material, style='md_lmhf'):
                  }
         case_basis = ['4-70']
     elif material == 'PBT':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pbt.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_pbt.csv')
         density = 1300
         conductivity = 0.29
         specific_heat = 2.23
@@ -203,7 +203,7 @@ def getMaterial(material, style='md_lmhf'):
                  }
         case_basis = ['4-50']
     elif material == 'PBTGF':
-        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','pbtgf.csv')
+        referenceCurve = os.path.join(systemPath,'..','data','faa_materials','FAA_pbtgf.csv')
         density = 1520
         conductivity = 0.36
         specific_heat = 1.68
