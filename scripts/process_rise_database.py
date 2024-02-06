@@ -380,7 +380,7 @@ if __name__ == "__main__":
                 tmp[long_ind] = tmp[long_ind][:-1]
                 mat_name = '_'.join(tmp)
             txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat_name, matClass, dataFiles, resultDir)
-            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat, refFlux, mat, refFlux)
+            txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
             
             for flux in fluxes:
                 txt = txt + '%s-%0.0f.csv-Time|'%(mat, flux)
