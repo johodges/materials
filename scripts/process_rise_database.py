@@ -327,7 +327,7 @@ if __name__ == "__main__":
                     tmp[long_ind] = tmp[long_ind][:-1]
                     mat_name = '_'.join(tmp)
                 if mat in ignores: continue
-                dataFile = os.path.join(out_dir, mat_name)
+                dataFile = os.path.join(out_dir, mat_name+'.csv')
                 d.to_csv(dataFile, index=False)
     
     material_database = material_database_filtered
