@@ -43,7 +43,7 @@ if __name__ == "__main__":
     if len(cmdargs.inputfiles) == 0:
         inputfile_dir = False #os.path.join(systemPath,'..','input_files')
     else:
-        inputfile_dir = cmdargs.inputfiles
+        inputfile_dir = cmdargs.inputfiles[0]
         if os.path.isabs(inputfile_dir) is False:
             inputfile_dir = os.path.join(systemPath, inputfile_dir)
     
