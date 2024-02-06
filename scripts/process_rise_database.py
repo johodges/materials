@@ -362,12 +362,19 @@ if __name__ == "__main__":
             mat = '%s-%02dmm'%(material, thickness)
             mat = mat.replace(',','_').replace(' ','_').replace('|','_')
             
+            mat_name = 'RISE_'+mat
+            while len(mat_name) > 40:
+                tmp = mat_name.split('_')
+                long_ind = np.argmax([len(t) for t in tmp])
+                tmp[long_ind] = tmp[long_ind][:-1]
+                mat_name = '_'.join(tmp)
+            
             if mat in ignores:
                 break
             
             dataFiles = ''
             for flux in fluxes:
-                dataFile = out_dir_spec+ 'RISE_%s-%02d.csv'%(mat, flux)
+                dataFile = out_dir_spec+ '%s-%02d.csv'%(mat_name, flux)
                 dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
@@ -379,12 +386,6 @@ if __name__ == "__main__":
             matClass = getMaterialClass(material)
             if matClass == 'Unknown': code = 's'
             
-            mat_name = 'RISE_'+mat
-            while len(mat_name) > 40:
-                tmp = mat_name.split('_')
-                long_ind = np.argmax([len(t) for t in tmp])
-                tmp[long_ind] = tmp[long_ind][:-1]
-                mat_name = '_'.join(tmp)
             txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat_name, matClass, dataFiles, resultDir)
             txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
             
