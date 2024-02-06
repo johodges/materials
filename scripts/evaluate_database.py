@@ -41,9 +41,11 @@ if __name__ == "__main__":
             os.remove(f)
     
     if len(cmdargs.inputfiles) == 0:
-        inputfile_dir = os.path.join(systemPath,'..','input_Files')
+        inputfile_dir = False #os.path.join(systemPath,'..','input_files')
     else:
-        inputfile_dir = False
+        inputfile_dir = cmdargs.inputfiles
+        if os.path.isabs(inputfile_dir) is False:
+            inputfile_dir = os.path.join(systemPath, inputfile_dir)
     
     # Initialize variables
     fs=16
