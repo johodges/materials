@@ -320,8 +320,14 @@ if __name__ == "__main__":
                 d = pd.DataFrame(np.round(np.array([outTime, outHrrpua]).T, decimals=1), columns=['Time','HRRPUA'])
                 mat = '%s-%02dmm'%(material, thickness)
                 mat = mat.replace(',','_').replace(' ','_').replace('|','_')
+                mat_name = 'RISE_'+mat
+                while len(mat_name) > 40:
+                    tmp = mat_name.split('_')
+                    long_ind = np.argmax([len(t) for t in tmp])
+                    tmp[long_ind] = tmp[long_ind][:-1]
+                    mat_name = '_'.join(tmp)
                 if mat in ignores: continue
-                dataFile = os.path.join(out_dir, 'RISE_%s-%02dmm-%02d.csv'%(material.replace('|','_').replace(' ','_').replace(',','_'), thickness, flux))
+                dataFile = os.path.join(out_dir, mat_name)
                 d.to_csv(dataFile, index=False)
     
     material_database = material_database_filtered
