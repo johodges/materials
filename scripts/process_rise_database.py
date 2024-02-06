@@ -318,7 +318,10 @@ if __name__ == "__main__":
                 material_database_filtered[material][thickness][flux]['hrrpua'] = outHrrpua
                 
                 d = pd.DataFrame(np.round(np.array([outTime, outHrrpua]).T, decimals=1), columns=['Time','HRRPUA'])
-                dataFile = os.path.join(out_dir, '%s-%02dmm-%02d.csv'%(material.replace('|','_').replace(' ','_').replace(',','_'), thickness, flux))
+                mat = '%s-%02dmm'%(material, thickness)
+                mat = mat.replace(',','_').replace(' ','_').replace('|','_')
+                if mat in ignores: continue
+                dataFile = os.path.join(out_dir, 'RISE_%s-%02dmm-%02d.csv'%(material.replace('|','_').replace(' ','_').replace(',','_'), thickness, flux))
                 d.to_csv(dataFile, index=False)
     
     material_database = material_database_filtered
@@ -358,7 +361,7 @@ if __name__ == "__main__":
             
             dataFiles = ''
             for flux in fluxes:
-                dataFile = out_dir_spec+ '%s-%02d.csv'%(mat, flux)
+                dataFile = out_dir_spec+ 'RISE_%s-%02d.csv'%(mat, flux)
                 dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
