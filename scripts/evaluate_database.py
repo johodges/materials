@@ -56,7 +56,7 @@ if __name__ == "__main__":
     colors = getJHcolors()
     
     # Read data
-    spec_file_dict = getMaterials(dataDirectory=os.path.join(systemPath,'..','data'))
+    spec_file_dict = getMaterials(dataDirectory=os.path.abspath(os.path.join(systemPath,'..','data')))
     materials = list(spec_file_dict.keys())
     
     # Prepare directories
