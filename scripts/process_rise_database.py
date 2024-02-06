@@ -383,10 +383,10 @@ if __name__ == "__main__":
             txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
             
             for flux in fluxes:
-                txt = txt + '%s-%0.0f.csv-Time|'%(mat, flux)
+                txt = txt + '%s-%0.0f.csv-Time|'%(mat_name, flux)
             txt = txt[:-1] + ','
             for flux in fluxes:
-                txt = txt + '%s-%0.0f.csv-HRRPUA|'%(mat, flux)
+                txt = txt + '%s-%0.0f.csv-HRRPUA|'%(mat_name, flux)
             txt = txt[:-1] + ','
             for flux in fluxes:
                 txt = txt + '%0.0f|'%(flux)
