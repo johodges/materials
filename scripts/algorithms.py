@@ -52,7 +52,8 @@ def findFds():
 def buildFdsFile(chid, cases, properties, Tign, front_h,
                  ignitionMode='Temperature', outputTemperature=False,
                  calculateDevcDt=True, devc_dt=1.,
-                 qflame_method='Froude', qflame_fixed=25):
+                 qflame_method='Froude', qflame_fixed=25,
+                 energyThreshold=0.0):
     ''' Generate a solid phase only FDS input file representing cone
     experimens at different exposures given a reference curve and
     material properties. The configuration can support up to 9
@@ -99,15 +100,19 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
     #txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.2, DENSITY=585., EMISSIVITY=1., SPECIFIC_HEAT=0.8, /\n"
     txt = txt+"&MATL ID='SAMPLE', CONDUCTIVITY=%0.4f, DENSITY=%0.1f, EMISSIVITY=%0.4f, SPECIFIC_HEAT=%0.4f, /\n"%(conductivity, density, emissivity, specific_heat)
     
+    totalEnergyMax = np.nanmax([cases[c]['totalEnergy'] for c in cases])
+    filtered_cases = [c for c in cases if cases[c]['totalEnergy'] > totalEnergyMax*energyThreshold]
     all_names = []
-    all_fluxes = [cases[c]['cone'] for c in cases]
-    all_deltas = [cases[c]['delta'] for c in cases]
-    all_tigns = [cases[c]['tign'] for c in cases]
-    all_names = [('CONE_%03.2f_%03d'%(cases[c]['delta']*1e3, cases[c]['cone'])).replace('.','p') for c in cases]
-    for i, c in enumerate(cases):
+    all_fluxes = [cases[c]['cone'] for c in filtered_cases]
+    all_deltas = [cases[c]['delta'] for c in filtered_cases]
+    all_tigns = [cases[c]['tign'] for c in filtered_cases]
+    all_names = [('CONE_%03.2f_%03d'%(cases[c]['delta']*1e3, cases[c]['cone'])).replace('.','p') for c in filtered_cases]
+    
+    for i, c in enumerate(filtered_cases):
         time = cases[c]['times_trimmed']
         hrrpua = cases[c]['hrrs_trimmed']
         namespace = all_names[i]
+        if cases[c]['totalEnergy'] < totalEnergyMax*energyThreshold: continue
         prevTime=-1e6
         for i in range(0, len(time)):
             if (time[i]-prevTime) < 0.0001:
