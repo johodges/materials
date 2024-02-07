@@ -63,8 +63,9 @@ if __name__ == "__main__":
     # Prepare directories
     fdsdir, fdscmd = findFds()
     
-    energyThreshold = 0.25
+    energyThreshold = 0.0
     output_statistics = dict()
+    
     for material in materials:
         output_statistics[material] = dict()
         cases = get_filtered_cases(spec_file_dict, material, energyThreshold=energyThreshold)

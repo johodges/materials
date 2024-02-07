@@ -74,7 +74,6 @@ def get_filtered_cases(spec_file_dict, material, energyThreshold=0.0, maxEnergyT
         print("Total energy for %s is %0.1f < %0.1f, skipping"%(material, totalEnergyMax, maxEnergyThreshold))
         return False
     
-    energyThreshold = 0.25
     filtered_cases = dict()
     for c in cases:
         if cases[c]['totalEnergy'] > totalEnergyMax*energyThreshold:
