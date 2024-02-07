@@ -12,7 +12,74 @@ from matplotlib.lines import Line2D
 import glob
 import subprocess
 
-from plotting import getJHcolors, getNewColors
+def load_material_simulation(material, baseDir, cases, windowSize=60, percentile=90):
+    chid = material.replace(' ','_')
+    workingDir = os.path.join(baseDir, material.replace(' ','_')) + os.sep
+    fluxes, deltas, tigns, cases_to_plot = sortCases(cases)
+    #workingDir = systemPath + os.sep +'..' + os.sep + 'input_files' + os.sep+ material + os.sep
+    #workingDir = workingDir.replace(' ', '_')
+    data = load_csv(workingDir, chid)
+    output_statistics = dict()
+    for i in range(0, len(cases)):
+        c = cases_to_plot[i]
+        namespace = ('CONE_%03.2f_%03d'%(cases[c]['delta']*1e3, cases[c]['cone'])).replace('.','p')
+        
+        label = r'%0.0f $\mathrm{kW/m^{2}}$'%(cases[c]['cone'])
+        delta0 = cases[c]['delta']
+        times = data['Time'].values
+        hrrpuas = data['"HRRPUA-'+namespace+'"'].values
+        
+        mod_peak = getTimeAveragedPeak(times, hrrpuas, windowSize)
+        exp_peak = getTimeAveragedPeak(cases[c]['times'],cases[c]['HRRs'], windowSize) #, referenceTimes=times)
+        
+        output_statistics[c] = dict()
+        
+        energyThreshold, exp_t = getTimeAveragedEnergy(cases[c]['times']-cases[c]['tign'],cases[c]['HRRs'], windowSize, percentile)
+        mod_t, timeAverage = getTimeAveraged_timeToEnergy(times-cases[c]['tign'], hrrpuas, windowSize, energyThreshold)
+        
+        output_statistics[c]['%0.0f_exp'%(percentile)] = exp_t
+        output_statistics[c]['%0.0f_mod'%(percentile)] = mod_t
+        print('%s\t\t%s\t\t%0.1f\t\t%0.1f\t\t%0.1f\t\t%0.1f'%(material, namespace, exp_peak, mod_peak, exp_t, mod_t))
+        
+        output_statistics[c]['delta'] = delta0
+        output_statistics[c]['coneExposure'] = fluxes[i]
+        output_statistics[c]['Qpeak_60s_exp'] = exp_peak
+        output_statistics[c]['Qpeak_60s_mod'] = mod_peak
+        
+    return output_statistics
+
+def get_ignition_temperature(material, baseDir, cases):
+    chid = material.replace(' ','_')
+    workingDir = os.path.join(baseDir, material.replace(' ','_')) + os.sep
+    fluxes, deltas, tigns, cases_to_plot = sortCases(cases)
+    #workingDir = systemPath + os.sep +'..' + os.sep + 'input_files' + os.sep+ material + os.sep
+    #workingDir = workingDir.replace(' ', '_')
+    data = load_csv(workingDir, chid)
+    Tigns = []
+    Tmaxs = []
+    for flux in ignitionTemperatureBasis:
+        tign = tigns[flux]
+        Tign = data.loc[data['Time'] > tign, '"WALL TEMPERATURE-%02d"'%(flux)].values[0]
+        Tmaxs.append(np.nanmax(data['"WALL TEMPERATURE-%02d"'%(flux)].values))
+        Tigns.append(Tign)
+    Tign = np.mean(Tigns)
+
+def get_filtered_cases(spec_file_dict, material, energyThreshold=0.0):
+    #xlim, ylim = getPlotLimits(material)
+    spec_file_dict[material] = processCaseData(spec_file_dict[material])
+    cases = spec_file_dict[material]['cases']
+    totalEnergyMax = np.nanmax([cases[c]['totalEnergy'] for c in cases])
+    
+    if totalEnergyMax < 100:
+        print("Total energy for %s is %0.1f < 100, skipping"%(material, totalEnergyMax))
+        return False
+    
+    energyThreshold = 0.25
+    filtered_cases = dict()
+    for c in cases:
+        if cases[c]['totalEnergy'] > totalEnergyMax*energyThreshold:
+            filtered_cases[c] = cases[c]
+    return filtered_cases
 
 def sortCases(cases):
     cases_to_plot = np.array(list(cases.keys()))
@@ -538,6 +605,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             
             #series = specificationFile.iloc[i]['FYI']
             #materialClass = specificationFile.iloc[i]['MaterialClass']
+            series = specificationFile.iloc[i]['Series']
             referenceExposure = str(specificationFile.iloc[i]['ReferenceExposure'])
             conductivity = specificationFile.iloc[i]['Conductivity']
             specific_heat = specificationFile.iloc[i]['SpecificHeat']
@@ -653,7 +721,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             spec_file_dict[m] = {'density': density, 'conductivity': conductivity, 'specific_heat': specific_heat,
                                         'heat_of_combustion': heat_of_combustion, 'soot_yield': soot_yield, 'emissivity': emissivity, 'nu_char': nu_char,
                                         'data': exp_data, 'cases': cases, 'case_basis': case_basis, 
-                                        'material': m, 'materialClass': materialClass}
+                                        'material': m, 'materialClass': materialClass, 'series': series}
     return spec_file_dict
             
 
@@ -982,6 +1050,7 @@ def interpolateBasisCases(mat, qr1, mass1, delta1, nondim_t1, t1, nondimtype):
     return nondim_time_out, hogs_out, qrs_out, mlr_out, times_out
 
 def plotBasisCases(mat, times, hogs, nondim_t, nondimtype, lw, colors, labelPlot):
+    from plotting import getJHcolors
     case_basis = list(mat['case_basis'].keys())
     if colors is False: colors = getJHcolors()
     for i, c in enumerate(case_basis):
@@ -1245,7 +1314,7 @@ def calculateUncertaintyBounds(flatx, flaty, flatFlux, split=False):
     return delta, sigma_m, sigma_e, num_points, points
 
 def plotMaterialExtraction(x, y, f, label, diff=None, axmin=None, axmax=None, loglog=False, labelName=None, mask=None):
-    
+    from plotting import getNewColors
     axmin2 = min([np.min(x), np.min(y)])
     axmax2 = min([np.max(x), np.max(y)])
     if mask is not None:

@@ -9,12 +9,10 @@ import numpy as np
 import pandas as pd
 import os, sys, argparse, glob
 
-from plotting import getJHcolors, getPlotLimits
-from algorithms import getMaterials, processCaseData, sortCases
-from algorithms import findFds, buildFdsFile, runModel, load_csv
+from plotting import getJHcolors
+from algorithms import getMaterials, sortCases, get_filtered_cases, load_material_simulation
+from algorithms import findFds, buildFdsFile, runModel
 from algorithms import calculateUncertainty, plotMaterialExtraction, calculateUncertaintyBounds
-from algorithms import getTimeAveragedPeak
-from algorithms import getTimeAveragedEnergy, getTimeAveraged_timeToEnergy
 
 if __name__ == "__main__":
     
@@ -65,40 +63,17 @@ if __name__ == "__main__":
     # Prepare directories
     fdsdir, fdscmd = findFds()
     
-    
+    energyThreshold = 0.25
     output_statistics = dict()
     for material in materials:
-        #if 'RISE_PVC_wall_carpet_paper_plasterboard-' not in material: continue
         output_statistics[material] = dict()
-        xlim, ylim = getPlotLimits(material)
-        spec_file_dict[material] = processCaseData(spec_file_dict[material])
+        cases = get_filtered_cases(spec_file_dict, material, energyThreshold=energyThreshold)
+        if cases is False: continue
+        if len(list(cases.keys())) <= 1: continue
+        
+        fluxes, deltas, tigns, cases_to_plot = sortCases(cases)
         
         properties = spec_file_dict[material]
-        cases = properties['cases']
-        
-        totalEnergyMax = np.nanmax([cases[c]['totalEnergy'] for c in cases])
-        
-        if totalEnergyMax < 100:
-            print("Total energy for %s is %0.1f < 100, skipping"%(material, totalEnergyMax))
-            continue
-            
-        times_trimmed = [cases[c]['times_trimmed'] for c in cases]
-        hrrs_trimmed = [cases[c]['hrrs_trimmed'] for c in cases]
-        
-        thicknesses = [cases[c]['delta'] for c in cases]
-        fluxes = [cases[c]['cone'] for c in cases]
-        
-        chid = material.replace(' ','_')
-        
-        energyThreshold = 0.25
-        filtered_cases = dict()
-        for c in cases:
-            if cases[c]['totalEnergy'] > totalEnergyMax*energyThreshold:
-                filtered_cases[c] = cases[c]
-        
-        fluxes, deltas, tigns, cases_to_plot = sortCases(filtered_cases)
-        
-        if len(list(filtered_cases.keys())) <= 1: continue
         
         workingDir = systemPath + os.sep +'..' + os.sep + 'input_files' + os.sep+ material + os.sep
         workingDir = workingDir.replace(' ', '_')
@@ -107,9 +82,11 @@ if __name__ == "__main__":
         # Calculate times to ignition
         Tign = 20
         front_h = 0
+        chid = material.replace(' ','_')
         
         txt = buildFdsFile(chid, cases, properties, Tign, front_h,
                            ignitionMode='Time', calculateDevcDt=False,
+                           outputTemperature=True,
                            energyThreshold=energyThreshold)
         
         with open("%s%s%s.fds"%(workingDir, os.sep, chid), 'w') as f:
@@ -121,36 +98,9 @@ if __name__ == "__main__":
         if runSimulations:
             runModel(workingDir, chid+".fds", 1, fdsdir, fdscmd, printLiveOutput=False)
         
+        baseDir = os.path.join(systemPath,'..','input_files')
+        output_statistics[material] = load_material_simulation(material, baseDir, cases)
         
-        
-        data = load_csv(workingDir, chid)
-        
-        for i in range(0, len(filtered_cases)):
-            c = cases_to_plot[i]
-            namespace = ('CONE_%03.2f_%03d'%(cases[c]['delta']*1e3, cases[c]['cone'])).replace('.','p')
-            
-            label = r'%0.0f $\mathrm{kW/m^{2}}$'%(cases[c]['cone'])
-            delta0 = cases[c]['delta']
-            times = data['Time'].values
-            hrrpuas = data['"HRRPUA-'+namespace+'"'].values
-            
-            mod_peak = getTimeAveragedPeak(times, hrrpuas, windowSize)
-            exp_peak = getTimeAveragedPeak(cases[c]['times'],cases[c]['HRRs'], windowSize) #, referenceTimes=times)
-            
-            output_statistics[material][c] = dict()
-            
-            energyThreshold, exp_t = getTimeAveragedEnergy(cases[c]['times']-cases[c]['tign'],cases[c]['HRRs'], windowSize, percentile)
-            mod_t, timeAverage = getTimeAveraged_timeToEnergy(times-cases[c]['tign'], hrrpuas, windowSize, energyThreshold)
-            
-            output_statistics[material][c]['%0.0f_exp'%(percentile)] = exp_t
-            output_statistics[material][c]['%0.0f_mod'%(percentile)] = mod_t
-            print('%s\t\t%s\t\t%0.1f\t\t%0.1f\t\t%0.1f\t\t%0.1f'%(material, namespace, exp_peak, mod_peak, exp_t, mod_t))
-            
-            output_statistics[material][c]['delta'] = delta0
-            output_statistics[material][c]['coneExposure'] = fluxes[i]
-            output_statistics[material][c]['Qpeak_60s_exp'] = exp_peak
-            output_statistics[material][c]['Qpeak_60s_mod'] = mod_peak
-    
     metric_outputs = dict()
     metrics = ['Qpeak_60s', '90'] #, '10', '25','50','75','90']
     metricLabels = ['60s Avg', '90% Energy Consumed'] #'10% Energy Consumed', '25% Energy Consumed', '50% Energy Consumed', '75% Energy Consumed', '90% Energy Consumed']
