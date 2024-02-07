@@ -64,14 +64,14 @@ def get_ignition_temperature(material, baseDir, cases):
         Tigns.append(Tign)
     Tign = np.mean(Tigns)
 
-def get_filtered_cases(spec_file_dict, material, energyThreshold=0.0):
+def get_filtered_cases(spec_file_dict, material, energyThreshold=0.0, maxEnergyThreshold=10):
     #xlim, ylim = getPlotLimits(material)
     spec_file_dict[material] = processCaseData(spec_file_dict[material])
     cases = spec_file_dict[material]['cases']
     totalEnergyMax = np.nanmax([cases[c]['totalEnergy'] for c in cases])
     
-    if totalEnergyMax < 100:
-        print("Total energy for %s is %0.1f < 100, skipping"%(material, totalEnergyMax))
+    if totalEnergyMax < maxEnergyThreshold:
+        print("Total energy for %s is %0.1f < %0.1f, skipping"%(material, totalEnergyMax, maxEnergyThreshold))
         return False
     
     energyThreshold = 0.25
