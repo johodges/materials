@@ -170,7 +170,7 @@ if __name__ == "__main__":
             if type(tig) == float:
                 hrrpua[times < tig] = 0
             
-            matind = material # + "_" + series
+            matind = material.replace('%','') # + "_" + series
             if material_database[matind] is False:
                 material_database[matind] = defaultdict(bool)
             
@@ -319,7 +319,7 @@ if __name__ == "__main__":
                 
                 d = pd.DataFrame(np.round(np.array([outTime, outHrrpua]).T, decimals=1), columns=['Time','HRRPUA'])
                 mat = '%s-%02dmm'%(material, thickness)
-                mat = mat.replace(',','_').replace(' ','_').replace('|','_')
+                mat = mat.replace(',','_').replace(' ','_').replace('|','_').replace('%','')
                 mat_name = 'RISE_'+mat
                 while len(mat_name) > 40:
                     tmp = mat_name.split('_')
