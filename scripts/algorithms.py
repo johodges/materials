@@ -692,6 +692,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
                     for ii, c in enumerate(columns):
                         c2 = os.path.abspath(c).split(os.sep)[-1]
                         exp_data[c2] = pd.DataFrame(np.array(d[hr:, ii], dtype=float))
+                exp_files = [os.path.basename(x) for x in dataFile.split('|')]
             else:
                 headerRows = int(headerRows)
                 # Read data file, manually due to differing number of header rows
@@ -707,7 +708,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
                             d[ii,j] = np.nan
                 columns = [str(c) for c in d[0]]
                 exp_data = pd.DataFrame(np.array(d[headerRows:, :], dtype=float), columns=columns)
-
+                exp_files = [os.path.basename(dataFile) for x in validationTimeColumns]
             cases = dict()
             for ii in range(0, len(validationTimeColumns)):
                 casename = 'case-%03d'%(ii)
@@ -721,7 +722,8 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             spec_file_dict[m] = {'density': density, 'conductivity': conductivity, 'specific_heat': specific_heat,
                                         'heat_of_combustion': heat_of_combustion, 'soot_yield': soot_yield, 'emissivity': emissivity, 'nu_char': nu_char,
                                         'data': exp_data, 'cases': cases, 'case_basis': case_basis, 
-                                        'material': m, 'materialClass': materialClass, 'series': series}
+                                        'material': m, 'materialClass': materialClass, 'series': series,
+                                        'timeColumns': validationTimeColumns, 'hrrColumns': validationHrrpuaColumns, 'expFiles': exp_files}
     return spec_file_dict
             
 
