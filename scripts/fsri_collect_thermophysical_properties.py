@@ -254,3 +254,7 @@ for d in os.scandir(data_dir):
     save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
     if not os.path.exists(save_dir): os.makedirs(save_dir)
     kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
+    if material == 'Black_PMMA':
+        save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed','PMMA')+os.sep
+        if not os.path.exists(save_dir): os.makedirs(save_dir)
+        kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
