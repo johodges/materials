@@ -819,7 +819,7 @@ def getMaterialClass(material):
     for w in woods:
         if w in m: materialClass = 'Wood-Based'
     
-    polymers = ['acrylic','hdpe','hips','ldpe','nylon','pbt','pc','pp','pvc','pmma','peek','pet','plastic','polycarbonate','polyester','polyolefin','pvdf',
+    polymers = ['abs','acrylic','hdpe','hips','ldpe','nylon','pbt','pc','pp','pvc','pmma','peek','pet','plastic','polycarbonate','polyester','polyolefin','pvdf',
                 'vinyl']
     for p in polymers:
         if p in m: materialClass = 'Polymers'
@@ -830,6 +830,7 @@ def getMaterialClass(material):
     
     if materialClass == 'Unknown':
         print("Warning material %s class is unknown"%(m))
+        materialClass = 'Others'
     return materialClass
 
 def calculateThicknessFromHrr(hrrs_trimmed, times_trimmed, mat, c):
