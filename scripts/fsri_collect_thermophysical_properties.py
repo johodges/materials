@@ -211,10 +211,10 @@ for d in os.scandir(data_dir):
         c_plot_data_cond.index.names = ['Temperature (C)']
         fname = os.path.join(data_dir,material,'HFM',material+'_HFM_'+cond+'_specific_heat.csv')
         c_plot_data_cond.to_csv(fname, index_label = 'Temperature (C)')
-
+saved = False
 for d in os.scandir(data_dir):
     material = d.path.split(os.sep)[-1]
-    print(material)
+    saved = False
     kpc_df = pd.Series(dtype='float64')
     try:
         fname = os.path.join(data_dir,material,'HFM',material+'_HFM_Density_Summary.csv')
@@ -234,7 +234,7 @@ for d in os.scandir(data_dir):
             capacity_df = pd.read_csv(fname, index_col = 'Temperature (C)')
         except:
             # print('NO DRY DATA')
-            continue
+            pass
     try:
         kpc_df.at['Thermal Conductivity (W/m-K)'] = conductivity_df['Conductivity Mean (W/m-K)'].iloc[1]
         kpc_df.at['Heat Capacity (J/kg-K)'] = capacity_df['Specific Heat Mean (J/kg-K)'].iloc[3]
@@ -243,18 +243,27 @@ for d in os.scandir(data_dir):
         except:
             kpc_df.at['Density (kg/m3)'] = density_df.loc['mean', 'Dry']
     except:
-        continue
-    try:
-        fname = os.path.join(data_dir,material,'Cone',material+'_Ignition_Temp_Properties.csv')
-        kpc_df.to_csv(fname, header=False)
-    except:
-        fname = os.path.join(data_dir,material,'HFM',material+'_Ignition_Temp_Properties.csv')
-        kpc_df.to_csv(fname, header=False)
+        pass
+    #try:
+    #    fname = os.path.join(data_dir,material,'Cone',material+'_Ignition_Temp_Properties.csv')
+    #    kpc_df.to_csv(fname, header=False)
+    #    saved = True
+    #except:
+    #    fname = os.path.join(data_dir,material,'HFM',material+'_Ignition_Temp_Properties.csv')
+    #    kpc_df.to_csv(fname, header=False)
+    #    saved = True
     
-    save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
-    if not os.path.exists(save_dir): os.makedirs(save_dir)
-    kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
+    if kpc_df.shape[0] > 0:
+        save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
+        if not os.path.exists(save_dir): os.makedirs(save_dir)
+        kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
+        saved = True
+    
     if material == 'Black_PMMA':
         save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed','PMMA')+os.sep
         if not os.path.exists(save_dir): os.makedirs(save_dir)
         kpc_df.to_csv(os.path.join(save_dir, 'Ignition_Temp_Properties.csv'), header=False)
+        saved = True
+    
+    if not saved:
+        print('NOT SAVED', material)

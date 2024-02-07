@@ -235,6 +235,7 @@ def importFsriDatabase(data_dir, outInt, Tinfty=300, ignores=['']):
     material_directories = glob.glob(os.path.join(os.path.abspath(data_dir),'*'))
     possible_materials = [d.split(os.sep)[-1] for d in material_directories]
     
+    print(possible_materials)
     complete_materials = dict()
     materials = []
     for i in range(0, len(material_directories)):
