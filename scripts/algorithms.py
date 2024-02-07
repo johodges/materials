@@ -723,7 +723,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
                                         'heat_of_combustion': heat_of_combustion, 'soot_yield': soot_yield, 'emissivity': emissivity, 'nu_char': nu_char,
                                         'data': exp_data, 'cases': cases, 'case_basis': case_basis, 
                                         'material': m, 'materialClass': materialClass, 'series': series,
-                                        'timeColumns': validationTimeColumns, 'hrrColumns': validationHrrpuaColumns, 'expFiles': exp_files}
+                                        'timeColumns': validationTimeColumns, 'hrrColumns': validationHrrpuaColumns, 'expFiles': exp_files, 'headerRows': headerRows}
     return spec_file_dict
             
 
