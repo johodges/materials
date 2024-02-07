@@ -253,6 +253,10 @@ for d in os.scandir(data_dir):
     #    kpc_df.to_csv(fname, header=False)
     #    saved = True
     
+    if material == 'ABS' and np.isnan(kpc_df.at['Density (kg/m3)']):
+        kpc_df.at['Density (kg/m3)'] = 1100
+        
+    
     if kpc_df.shape[0] > 0:
         save_dir = os.path.join(systemPath,'..','data','fsri_materials_processed',material)+os.sep
         if not os.path.exists(save_dir): os.makedirs(save_dir)
