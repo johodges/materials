@@ -370,7 +370,7 @@ if __name__ == "__main__":
                 mat_name = '_'.join(tmp)
             
             if mat in ignores:
-                break
+                continue
             
             dataFiles = ''
             for flux in fluxes:
