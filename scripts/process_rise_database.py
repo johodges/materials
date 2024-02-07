@@ -335,7 +335,7 @@ if __name__ == "__main__":
     inputFileDir = "../../../fds/Validation/Scaling_Pyrolysis/"
     #expFileDir = "../../../exp/RISE_Materials/"
     emissivity = 1
-    txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
+    txt = 'Code,Number,Series,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
@@ -386,7 +386,7 @@ if __name__ == "__main__":
             matClass = getMaterialClass(material)
             if matClass == 'Unknown': code = 's'
             
-            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat_name, matClass, dataFiles, resultDir)
+            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'RISE_Materials', mat_name, matClass, dataFiles, resultDir)
             txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
             
             for flux in fluxes:

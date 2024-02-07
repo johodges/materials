@@ -304,7 +304,7 @@ if __name__ == "__main__":
     inputFileDir = data_dir
     expFileDir = data_dir
     emissivity = 1
-    txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
+    txt = 'Code,Number,Series,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
@@ -331,7 +331,7 @@ if __name__ == "__main__":
             dataFiles = dataFiles + dataFile + '|'
         dataFiles = dataFiles[:-1]
         
-        txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat, matClass, dataFiles, resultDir)
+        txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'FSRI_Materials', mat, matClass, dataFiles, resultDir)
         txt = txt + "%s,%s,50,%0.8f,%s-50.csv-Time,%s-50.csv-HRRPUA,"%(inputFileDir, expFileDir, thickness, mat, mat)
         txt = txt + '%s-25.csv-Time|%s-50.csv-Time|%s-75.csv-Time,'%(mat, mat, mat)
         txt = txt + '%s-25.csv-HRRPUA|%s-50.csv-HRRPUA|%s-75.csv-HRRPUA,'%(mat, mat, mat)

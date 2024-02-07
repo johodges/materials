@@ -288,7 +288,7 @@ if __name__ == "__main__":
     inputFileDir = ""
     expFileDir = ""
     
-    txt = 'Code,Number,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
+    txt = 'Code,Number,Series,Material,MaterialClass,DataFile,ResultDir,InputFileDir,ExpFileDir,'
     txt = txt + 'ReferenceExposure,ReferenceThickness,ReferenceTime,ReferenceHRRPUA,'
     txt = txt + 'ValidationTimes,ValidationHrrpuaColumns,ValidationFluxes,'
     txt = txt + 'Density,Conductivity,SpecificHeat,Emissivity,Thickness,'
@@ -356,7 +356,7 @@ if __name__ == "__main__":
             
             flux_txt = '%s%0.0f|'%(flux_txt, fluxes[i])
             
-        txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,"%(code, number, mat, matClass, dataFiles_txt, resultDir)
+        txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'FAA_Polymers', mat, matClass, dataFiles_txt, resultDir)
         txt = txt + "%s,%s,%0.0f,%0.8f,%s,%s,"%(inputFileDir, expFileDir, reference_flux, thickness/1000, reference_time,reference_hrr)
         txt = txt + timeFiles[:-1] + ',' + hrrFiles[:-1] + ',' + flux_txt[:-1] + ','
         txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,'%(density, conductivity, specific_heat, emissivity)
