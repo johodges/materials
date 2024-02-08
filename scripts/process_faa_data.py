@@ -252,8 +252,8 @@ def processCaseData_old(material, style='md_lmhf', save_csv=False):
         times = data[cases[c]['Time']]
         HRRs = data[cases[c]['HRR']]
         
-        targetTimes, HRRs_interp = interpolateExperimentalData(times.values, HRRs.values, targetDt=15, filterWidth=False)
-        tign, times_trimmed, hrrs_trimmed = findLimits(times.values, HRRs.values, 0.001, 0.9)
+        tign, times_trimmed, hrrs_trimmed = interpolateExperimentalData(times.values, HRRs.values, targetDt=15, filterWidth=False)
+        #tign, times_trimmed, hrrs_trimmed = findLimits(times.values, HRRs.values, 0.001, 0.9)
         
         if save_csv:
             pd.DataFrame(np.array([times_trimmed.values-tign, hrrs_trimmed.values]).T, columns=['Time','HRRPUA']).to_csv('%s_%s.csv'%(material, c))
