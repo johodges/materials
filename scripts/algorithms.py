@@ -562,6 +562,11 @@ def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
         dt = targetDt
     else:
         dt = np.nanmin(times[1:]-times[:-1])
+        if dt == 0:
+            dts = times[1:]-times[:-1]
+            dts[dts == 0] = 1e6
+            dt = np.nanmin(dts)
+            
     t, v = interpolateTimeSeriesToDt(times, HRRs, dt)
     
     if filterWidth is not False:
