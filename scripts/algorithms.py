@@ -786,6 +786,9 @@ def processSingleCase(c, data):
     if len(HRRs.shape) == 2:
         HRRs = HRRs[:, 0]
         times = times[:, 0]
+    while np.isnan(times.values[-1]) or np.isnan(HRRs.values[-1]):
+        times = times.iloc[:-1]
+        HRRs = HRRs.iloc[:-1]
     tign, times_trimmed, hrrs_trimmed = interpolateExperimentalData(times, HRRs, filterWidth=False)
     
     tmp = (hrrs_trimmed*0.1016*0.1016)
