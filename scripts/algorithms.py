@@ -552,9 +552,11 @@ def findLimits(times, HRRs, energyCutoff1=0.001, energyCutoff2=1.01):
     return tign, times_trimmed, hrrs_trimmed
 
 def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
-    ''' Interpolate experimental data to a common dt. Will use the minimum dt
-    in the dataset unless a target dt is specified. Will apply time averaging
-    on a fixed number of dt if filterWidth is specified.
+    ''' Interpolate experimental data to a common dt. Will dynamically
+    determine the points to use based on the minimum dt in the dataset and
+    an algorithm to preserve the maximum and total energy. This can be
+    overwritten by specifying a target dt. Will apply time averaging on a
+    fixed number of dt if filterWidth is specified.
     '''
     if targetDt is not False:
         dt = targetDt
@@ -565,12 +567,37 @@ def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
     if filterWidth is not False:
         window = filterWidth*dt
         t, v = timeAverage(t, v, window)
-        
+    
+    tign, t, v = findLimits(t, v, 0.001, 0.99)
+    
+    # Data at common time interval and time averaged
     tmax = np.ceil(np.nanmax(times)/dt)*dt
     tmin = np.floor(np.nanmin(times)/dt)*dt
-    targetTimes = np.linspace(tmin, tmax, int((tmax-tmin)/dt + 1))
-    HRRs = np.interp(targetTimes, t, v)
-    return targetTimes, HRRs
+    targetTimes = np.linspace(tmin-tign, tmax-tign, int((tmax-tmin)/dt + 1))
+    HRRs = np.interp(targetTimes, t-tign, v)
+    
+    if targetDt is not False:
+        return tign, targetTimes, HRRs
+    
+    # Calculate total energy for data
+    targetMaxHRR = np.nanmax(HRRs)
+    
+    times = np.linspace(0, tmax-tign, 11)
+    times = np.append(times, targetTimes[np.argmax(HRRs)])
+    times = np.sort(times)
+    new_hrrs = np.interp(times, targetTimes, HRRs)
+    
+    new_hrrs_linear = np.interp(targetTimes, times, new_hrrs)
+    
+    l1norm = np.max(abs(HRRs-new_hrrs_linear))
+    while l1norm > 0.01*targetMaxHRR:
+        ind = np.argmax(abs(HRRs-new_hrrs_linear))
+        times = np.append(times, targetTimes[ind])
+        times = np.sort(times)
+        new_hrrs = np.interp(times, targetTimes, HRRs)
+        new_hrrs_linear = np.interp(targetTimes, times, new_hrrs)
+        l1norm = np.max(abs(HRRs-new_hrrs_linear))
+    return tign, times, new_hrrs
 
 
 def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file.csv"):
@@ -754,15 +781,8 @@ def processSingleCase(c, data):
     if len(HRRs.shape) == 2:
         HRRs = HRRs[:, 0]
         times = times[:, 0]
-    targetTimes, HRRs_interp = interpolateExperimentalData(times, HRRs, targetDt=15, filterWidth=False)
-    tign, times_trimmed, hrrs_trimmed = findLimits(times, HRRs, 0.001, 0.99)
+    tign, times_trimmed, hrrs_trimmed = interpolateExperimentalData(times, HRRs, filterWidth=False)
     
-    '''
-    tmp = (HRRs*0.1016*0.1016)
-    tmp[np.isnan(tmp)] = 0
-    times[np.isnan(times)] = 0
-    totalEnergy = np.trapz(tmp,  times)
-    '''
     tmp = (hrrs_trimmed*0.1016*0.1016)
     tmp[np.isnan(tmp)] = 0
     times_trimmed[np.isnan(times_trimmed)] = 0
