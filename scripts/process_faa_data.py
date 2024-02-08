@@ -251,7 +251,9 @@ def processCaseData_old(material, style='md_lmhf', save_csv=False):
     for i, c in enumerate(list(cases.keys())):
         times = data[cases[c]['Time']]
         HRRs = data[cases[c]['HRR']]
-        
+        while np.isnan(times.values[-1]) or np.isnan(HRRs.values[-1]):
+            times = times.iloc[:-1]
+            HRRs = HRRs.iloc[:-1]
         tign, times_trimmed, hrrs_trimmed = interpolateExperimentalData(times.values, HRRs.values, targetDt=15, filterWidth=False)
         #tign, times_trimmed, hrrs_trimmed = findLimits(times.values, HRRs.values, 0.001, 0.9)
         

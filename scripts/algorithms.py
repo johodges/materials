@@ -579,7 +579,7 @@ def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
     tmax = np.ceil(np.nanmax(times)/dt)*dt
     tmin = np.floor(np.nanmin(times)/dt)*dt
     targetTimes = np.linspace(tmin-tign, tmax-tign, int((tmax-tmin)/dt + 1))
-    HRRs = np.interp(targetTimes, t-tign, v)
+    HRRs = np.interp(targetTimes, t-tign, v, right=0.0)
     
     if targetDt is not False:
         return tign, targetTimes, HRRs
@@ -590,9 +590,9 @@ def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
     times = np.linspace(0, tmax-tign, 11)
     times = np.append(times, targetTimes[np.argmax(HRRs)])
     times = np.sort(times)
-    new_hrrs = np.interp(times, targetTimes, HRRs)
+    new_hrrs = np.interp(times, targetTimes, HRRs, right=0.0)
     
-    new_hrrs_linear = np.interp(targetTimes, times, new_hrrs)
+    new_hrrs_linear = np.interp(targetTimes, times, new_hrrs, right=0.0)
     
     l1norm = np.max(abs(HRRs-new_hrrs_linear))
     while l1norm > 0.01*targetMaxHRR:
@@ -600,7 +600,7 @@ def interpolateExperimentalData(times, HRRs, targetDt=False, filterWidth=False):
         times = np.append(times, targetTimes[ind])
         times = np.sort(times)
         new_hrrs = np.interp(times, targetTimes, HRRs)
-        new_hrrs_linear = np.interp(targetTimes, times, new_hrrs)
+        new_hrrs_linear = np.interp(targetTimes, times, new_hrrs, right=0.0)
         l1norm = np.max(abs(HRRs-new_hrrs_linear))
     return tign, times, new_hrrs
 
