@@ -314,7 +314,7 @@ if __name__ == "__main__":
     fluxes = [25, 50, 75]
     for material in list(material_database.keys()):
         conductivity = material_database[material]['conductivity']
-        specific_heat = material_database[material]['heatCapacity']
+        specific_heat = material_database[material]['heatCapacity']/1000
         density = material_database[material]['density']
         thickness = material_database[material][50]['thickness']
         heat_of_combustion = material_database[material][50]['HeatOfCombustion']
