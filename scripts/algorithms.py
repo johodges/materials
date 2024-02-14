@@ -57,9 +57,10 @@ def get_ignition_temperature(material, baseDir, cases):
     data = load_csv(workingDir, chid)
     Tigns = []
     Tmaxs = []
-    for flux, tign in zip(fluxes, tigns):
-        Tign = data.loc[data['Time'] > tign, '"WALL TEMPERATURE-%02d"'%(flux)].values[0]
-        Tmaxs.append(np.nanmax(data['"WALL TEMPERATURE-%02d"'%(flux)].values))
+    for flux, delta, tign in zip(fluxes, deltas, tigns):
+        namespace = 'CONE_%03.2f_%03d'%(delta*1e3, flux)
+        Tign = data.loc[data['Time'] > tign, '"WALL TEMPERATURE-%s"'%(namespace)].values[0]
+        Tmaxs.append(np.nanmax(data['"WALL TEMPERATURE-%s"'%(namespace)].values))
         Tigns.append(Tign)
     Tign = np.mean(Tigns)
 
