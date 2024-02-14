@@ -161,6 +161,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
     txt = txt+"&DUMP DT_CTRL=%0.1f, DT_DEVC=%0.1f, DT_HRR=%0.1f, SIG_FIGS=4, SIG_FIGS_EXP=2, /\n"%(DT_DEVC, DT_DEVC, DT_DEVC)
     txt = txt+"&MISC SOLID_PHASE_ONLY=.TRUE., TMPA=27., /\n"
     txt = txt+"&MESH ID='MESH', IJK=3,3,3, XB=0.,0.3,0.,0.3,0.,0.3, /\n"
+    txt = txt+"&MESH ID='MESH', IJK=3,3,3, XB=0.6,0.9,0.,0.3,0.,0.3, /\n"
     txt = txt+"&REAC ID='PROPANE', FUEL='PROPANE', HEAT_OF_COMBUSTION=%0.1f, SOOT_YIELD=%0.8f /\n"%(heat_of_combustion*1e3, soot_yield)
     txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.10, DENSITY=65., EMISSIVITY=0.9, SPECIFIC_HEAT=1.14, /\n"
     #txt = txt+"&MATL ID='BACKING', CONDUCTIVITY=0.2, DENSITY=585., EMISSIVITY=1., SPECIFIC_HEAT=0.8, /\n"
@@ -214,6 +215,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         if i%3 == 0: y = y + 0.1
         XYZ = [((i % 3))*0.1+0.05, y, 0.0]
         XB = [XYZ[0]-0.05, XYZ[0]+0.05, XYZ[1]-0.05, XYZ[1]+0.05, 0.0,0.0]
+        XB2 = [XYZ[0]-0.05+0.6, XYZ[0]+0.05+0.6, XYZ[1]-0.05, XYZ[1]+0.05, 0.0,0.0]
         
         # No ignition for surface temperature calculation
         txt = txt+"&SURF ID='SAMPLE-%s_noign', EXTERNAL_FLUX=%0.1f, "%(namespace, flux)
@@ -238,7 +240,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         
         # Add vent for before ignition
         txt = txt+"&VENT ID='SAMPLE-%s_noign', SURF_ID='SAMPLE-%s_noign', XB="%(namespace, namespace)
-        for x in XB:
+        for x in XB2:
             txt = txt+"%0.4f,"%(x)
         txt = txt+' /\n'
         
@@ -251,7 +253,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         txt = txt+', /\n'
         
         txt = txt+"&DEVC ID='WALL TEMPERATURE-%s', INITIAL_STATE=.FALSE., IOR=3, OUTPUT=%s, "%(namespace, tempOutput)
-        txt = txt+"QUANTITY='WALL TEMPERATURE', SETPOINT=%0.1f, XYZ=%0.4f,%0.4f,%0.4f, /\n"%(Tign, XYZ[0], XYZ[1], XYZ[2])
+        txt = txt+"QUANTITY='WALL TEMPERATURE', SETPOINT=%0.1f, XYZ=%0.4f,%0.4f,%0.4f, /\n"%(Tign, XYZ[0]+0.6, XYZ[1], XYZ[2])
         
         txt = txt+"&CTRL ID='IGNITION-CTRL-%s', FUNCTION_TYPE='ANY', INPUT_ID='WALL TEMPERATURE-%s', /\n"%(namespace, namespace)
         if ignitionMode == 'Time':
