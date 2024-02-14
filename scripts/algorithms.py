@@ -237,7 +237,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         txt = txt+'THICKNESS(1:2)=%0.8f,%0.8f, /\n'%(delta, 0.0254/2)
         
         # Add vent for before ignition
-        txt = txt+"&VENT ID='SAMPLE-%s_noign', SURF_ID='SAMPLE-%s', XB="%(namespace, namespace)
+        txt = txt+"&VENT ID='SAMPLE-%s_noign', SURF_ID='SAMPLE-%s_noign', XB="%(namespace, namespace)
         for x in XB:
             txt = txt+"%0.4f,"%(x)
         txt = txt+' /\n'
