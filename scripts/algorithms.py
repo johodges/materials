@@ -215,7 +215,12 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         XYZ = [((i % 3))*0.1+0.05, y, 0.0]
         XB = [XYZ[0]-0.05, XYZ[0]+0.05, XYZ[1]-0.05, XYZ[1]+0.05, 0.0,0.0]
         
+        # No ignition for surface temperature calculation
+        txt = txt+"&SURF ID='SAMPLE-%s_noign', EXTERNAL_FLUX=%0.1f, "%(namespace, flux)
+        txt = txt+"HEAT_TRANSFER_COEFFICIENT=%0.4f, HEAT_TRANSFER_COEFFICIENT_BACK=10., "%(10)
+        txt = txt+"MATL_ID(1:2,1)='SAMPLE','BACKING', THICKNESS(1:2)=%0.8f,%0.8f, /\n"%(delta, 0.0254/2)
         
+        # Ignition
         txt = txt+"&SURF ID='SAMPLE-%s', EXTERNAL_FLUX=%0.1f, "%(namespace, flux)
         txt = txt+"HEAT_TRANSFER_COEFFICIENT=%0.4f, HEAT_TRANSFER_COEFFICIENT_BACK=10., "%(front_h)
         txt = txt+"HRRPUA=1., IGNITION_TEMPERATURE=%0.1f, MATL_ID(1:2,1)='SAMPLE','BACKING', "%(Tign)
@@ -231,6 +236,13 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
             txt = txt + "%0.8f,"%(filtered_delta[j])
         txt = txt+'THICKNESS(1:2)=%0.8f,%0.8f, /\n'%(delta, 0.0254/2)
         
+        # Add vent for before ignition
+        txt = txt+"&VENT ID='SAMPLE-%s_noign', SURF_ID='SAMPLE-%s', XB="%(namespace, namespace)
+        for x in XB:
+            txt = txt+"%0.4f,"%(x)
+        txt = txt+' /\n'
+        
+        # Add obst for after ignition
         txt = txt+"&OBST ID='SAMPLE-%s', SURF_ID='SAMPLE-%s', XB="%(namespace, namespace)
         for x in XB:
             txt = txt+"%0.4f,"%(x)
