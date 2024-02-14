@@ -63,6 +63,7 @@ def get_ignition_temperature(material, baseDir, cases):
         Tmaxs.append(np.nanmax(data['"WALL TEMPERATURE-%s"'%(namespace)].values))
         Tigns.append(Tign)
     Tign = np.mean(Tigns)
+    return Tign
 
 def get_filtered_cases(spec_file_dict, material, energyThreshold=0.0, maxEnergyThreshold=10):
     #xlim, ylim = getPlotLimits(material)
