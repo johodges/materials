@@ -39,7 +39,7 @@ def load_material_simulation(material, baseDir, cases, windowSize=60, percentile
         
         output_statistics[c]['%0.0f_exp'%(percentile)] = exp_t
         output_statistics[c]['%0.0f_mod'%(percentile)] = mod_t
-        print('%s\t\t%s\t\t%0.1f\t\t%0.1f\t\t%0.1f\t\t%0.1f'%(material, namespace, exp_peak, mod_peak, exp_t, mod_t))
+        #print('%s\t\t%s\t\t%0.1f\t\t%0.1f\t\t%0.1f\t\t%0.1f'%(material, namespace, exp_peak, mod_peak, exp_t, mod_t))
         
         output_statistics[c]['delta'] = delta0
         output_statistics[c]['coneExposure'] = fluxes[i]
