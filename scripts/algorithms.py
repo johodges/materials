@@ -148,7 +148,7 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
     conductivity = properties['conductivity']
     emissivity = properties['emissivity']
     specific_heat = properties['specific_heat']
-    soot_yield = properties['soot_yield']
+    soot_yield = max([properties['soot_yield'], 0.001])
     heat_of_combustion = properties['heat_of_combustion']
     
     tempOutput = '.TRUE.' if outputTemperature else '.FALSE.'
@@ -661,7 +661,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             #preprocess = specificationFile.iloc[i]['Preprocess']
             nu_char = specificationFile.iloc[i]['CharFraction']
             heat_of_combustion = specificationFile.iloc[i]['HeatOfCombustion']
-            soot_yield = specificationFile.iloc[i]['SootYield']
+            soot_yield = max([specificationFile.iloc[i]['SootYield'],0.001])
             materialClass = specificationFile.iloc[i]['MaterialClass']
             
             #resultDir = specificationFile.iloc[i]['ResultDir'].replace('\\\\','\\').replace('"','')
