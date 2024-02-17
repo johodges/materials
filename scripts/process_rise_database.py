@@ -51,6 +51,9 @@ if __name__ == "__main__":
             values = tmp[1].split(';')
             
             material = '|'.join([x for x in values[:4] if x != ''])
+            material = material.replace('Woolfabric','Wool fabric')
+            material = material.replace('fabric Mixed','fabric, mixed')
+            
             product = values[4]
             series = values[8]
     
