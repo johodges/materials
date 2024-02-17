@@ -663,6 +663,7 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
             heat_of_combustion = specificationFile.iloc[i]['HeatOfCombustion']
             soot_yield = max([specificationFile.iloc[i]['SootYield'],0.001])
             materialClass = specificationFile.iloc[i]['MaterialClass']
+            fyi = specificationFile.iloc[i]['FYI']
             
             #resultDir = specificationFile.iloc[i]['ResultDir'].replace('\\\\','\\').replace('"','')
             #if os.path.exists(resultDir) is not True: os.mkdir(resultDir)
@@ -769,7 +770,8 @@ def getMaterials(material=False, dataDirectory="..//data", namespace="*spec_file
                                         'heat_of_combustion': heat_of_combustion, 'soot_yield': soot_yield, 'emissivity': emissivity, 'nu_char': nu_char,
                                         'data': exp_data, 'cases': cases, 'case_basis': case_basis, 
                                         'material': m, 'materialClass': materialClass, 'series': series,
-                                        'timeColumns': validationTimeColumns, 'hrrColumns': validationHrrpuaColumns, 'expFiles': exp_files, 'headerRows': headerRows}
+                                        'timeColumns': validationTimeColumns, 'hrrColumns': validationHrrpuaColumns, 'expFiles': exp_files, 'headerRows': headerRows,
+                                        'fyi': fyi}
     return spec_file_dict
             
 
