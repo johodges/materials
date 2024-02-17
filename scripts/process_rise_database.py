@@ -385,7 +385,7 @@ if __name__ == "__main__":
             dataFiles = ''
             for flux in fluxes:
                 dataFile = out_dir_spec+ '%s-%02d.csv'%(mat_name, flux)
-                dataFiles = dataFiles + dataFile + '|'
+                dataFiles = dataFiles + dataFile + '_'
             dataFiles = dataFiles[:-1]
             
             if (50 in fluxes):
