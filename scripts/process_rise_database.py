@@ -397,7 +397,7 @@ if __name__ == "__main__":
             if matClass == 'Unknown': code = 's'
             m = material.replace('%',' ').replace('-',' ').replace(',',' ').replace('.',' ')
             while ('  ' in m): m = m.replace('  ',' ')
-            m = 'RISE_'+m + '-%0.4f'%(thickness)
+            m = 'RISE_'+m + '-%0.0f'%(thickness)
             m = m.replace('|','-').replace('.','p')
             
             txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'RISE_Materials', m, matClass, dataFiles, resultDir)
