@@ -118,7 +118,7 @@ def findFds():
 
 def buildFdsFile(chid, cases, properties, Tign, front_h,
                  ignitionMode='Temperature', outputTemperature=False,
-                 calculateDevcDt=True, devc_dt=1.,
+                 calculateDevcDt=True, devc_dt=10.,
                  qflame_method='Froude', qflame_fixed=25,
                  energyThreshold=0.0):
     ''' Generate a solid phase only FDS input file representing cone
