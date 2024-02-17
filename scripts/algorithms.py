@@ -860,7 +860,7 @@ def getMaterialClass(material):
     
     woods = ['balsa', 'composite_deck_board', 'douglas_fir', 'engineered_flooring', 'eucalyptus',
               'hardboard','homasote','luan','masonite','mdf','oak','osb','pallet',
-              'particle_board','particleboard','pine','plywood'
+              'particle_board','particleboard','pine','plywood',
               'spruce','waferboard','wood']
     for w in woods:
         if w in m: materialClass = 'Wood-Based'
