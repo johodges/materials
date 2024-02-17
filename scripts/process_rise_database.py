@@ -385,7 +385,7 @@ if __name__ == "__main__":
             dataFiles = ''
             for flux in fluxes:
                 dataFile = out_dir_spec+ '%s-%02d.csv'%(mat_name, flux)
-                dataFiles = dataFiles + dataFile + '_'
+                dataFiles = dataFiles + dataFile + '|'
             dataFiles = dataFiles[:-1]
             
             if (50 in fluxes):
@@ -398,6 +398,7 @@ if __name__ == "__main__":
             m = material.replace('%',' ').replace('-',' ').replace(',',' ')
             while ('  ' in m): m = m.replace('  ',' ')
             m = 'RISE_'+m + '-%0.4f'%(thickness)
+            m = m.replace('|','-')
             
             txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'RISE_Materials', m, matClass, dataFiles, resultDir)
             txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
