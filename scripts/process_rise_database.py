@@ -17,16 +17,16 @@ if __name__ == "__main__":
     except:
         pass
     
-    ignores = ['-29mm',
+    ignores = [
                'Carpet_Glue_Aluminum_plate_2_mm-05mm',
                'FR_EPS_Calcium_silicate_board-25mm',
                'FR_Particle_board-12mm',
                'Mineral_wool_faced_Combustible_face-30mm',
                'Plastic_faced_steel_sheet_Mineral_wool-25mm',
-               'Plywood-12mm',
+               #'Plywood-12mm',
                'polyester_fabric-00mm',
                'RPPVC_EPR-16mm',
-               'Solid_acrylic-12mm',
+               #'Solid_acrylic-12mm',
                ]
     
     warn_mass = False
@@ -51,6 +51,7 @@ if __name__ == "__main__":
             values = tmp[1].split(';')
             
             material = '|'.join([x for x in values[:4] if x != ''])
+            product = values[4]
             series = values[8]
     
             tmp = txt.split('Scalars\n')[1].split('VectorData\n')[0]
@@ -94,11 +95,11 @@ if __name__ == "__main__":
                         #print("Warning no SEA found for %s"%(file))
                         soot_yield = -1
                     else:
-                        print(file, soot_yield, len(soot_yield))
+                        pass #print(file, soot_yield, len(soot_yield))
                     #assert False, "Stopped"
                 else:
                     soot_yield = soot_yield/8700
-                print(file, scalars['Specific extinction area (avg) (m2/kg)'], soot_yield)
+                #print(file, scalars['Specific extinction area (avg) (m2/kg)'], soot_yield)
             else:
                 print("Warning no SEA found for %s"%(file))
                 print(scalarColumns)
@@ -171,12 +172,23 @@ if __name__ == "__main__":
             if type(tig) == float:
                 hrrpua[times < tig] = 0
             
-            matind = material.replace('%','') # + "_" + series
+            matind = material.replace('%','').lower() # + "_" + series
+            if matind == '':
+                material = product
+                matind = material.replace('%','').lower()
+                if matind == '':
+                    continue
             if material_database[matind] is False:
                 material_database[matind] = defaultdict(bool)
-            
-            if material_database[matind][thickness] is False:
+            if len(material_database[matind].keys()) == 0:
                 material_database[matind][thickness] = defaultdict(bool)
+            else:
+                thicknesses = np.array([x for x in list(material_database[matind].keys()) if type(x) == float])
+                if np.min(abs(thicknesses-thickness)) < 0.5:
+                    thickness = thicknesses[np.argmin(abs(thicknesses-thickness))]
+                    material_dict['thickness'] = thickness
+                else:
+                    material_database[matind][thickness] = defaultdict(bool)
             
             if material_database[matind][thickness][HF] is False:
                 material_database[matind][thickness][HF] = defaultdict(bool)
@@ -186,13 +198,14 @@ if __name__ == "__main__":
             material_database[matind][thickness][HF]['testCount'] = testCount
             
             material_database[matind][thickness][HF][testCount] = material_dict
+            
         
         #except:
         #    print(file)
     
     material_database_filtered = defaultdict(bool)
     materials = list(material_database.keys())
-    
+    unused_tests = ''
     for material in materials:
         thicknesses = list(material_database[material].keys())
         soot_yields = []
@@ -200,7 +213,17 @@ if __name__ == "__main__":
             if type(thickness) is str: continue
             if thickness <= 0: continue
             fluxes = list(material_database[material][thickness].keys())
-            if len(fluxes) < 2: continue
+            if len(fluxes) < 2:
+                flux = fluxes[0]
+                testCount = material_database[material][thickness][flux]['testCount']
+                if testCount > 1:
+                    tests='|'.join([material_database[material][thickness][flux][x]['FYI'] for x in list(material_database[material][thickness][flux].keys()) if type(x) != str])
+                else:
+                    tests = material_database[material][thickness][flux][1]['FYI']
+                unused_tests=unused_tests + '|' + tests
+                print("%s thickness %0.1f has only 1 flux, tests %s"%(material, thickness, tests))
+                #assert False, "Stopped"
+                continue
             densities = []
             HoCs = []
             for flux in fluxes:
