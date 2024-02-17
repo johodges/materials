@@ -150,7 +150,8 @@ if __name__ == "__main__":
             material_dict['density'] = rho
             material_dict['thickness'] = thickness
             material_dict['HeatOfCombustion'] = dHc
-            material_dict['FYI'] = series
+            material_dict['FYI'] = file.split('-')[-1].split('.txt')[0]
+            material_dict['FYI2'] = series
             material_dict['SootYield'] = soot_yield
             
             tmp = txt.split('VectorData\n')[1].split('\n')
@@ -262,11 +263,14 @@ if __name__ == "__main__":
                 outInt2 = 15
                 if testCount > 1:
                     tMax = 0
+                    tests = ''
                     for i in range(1, testCount+1):
                         raw_times = material_database_filtered[material][thickness][flux][i]['raw_times']
                         raw_hrrpuas = material_database_filtered[material][thickness][flux][i]['raw_hrrpua']
                         tign = material_database_filtered[material][thickness][flux][i]['tIgn']
                         tMax = max([tMax, np.nanmax(raw_times)-tign])
+                        tests=tests + '%s|'%(material_database_filtered[material][thickness][flux][i]['FYI'])
+                    tests = tests[:-1]
                     t_interp = np.linspace(0, np.round(tMax), int(np.round(tMax)*10+1))
                     hrrpua_interp = np.zeros_like(t_interp)
                     for i in range(1, testCount+1):
@@ -288,6 +292,7 @@ if __name__ == "__main__":
                     hrrpua_interp = np.interp(t_interp, raw_times-tign, raw_hrrpuas)
                     times = np.append(np.array([0, tign-1]), t_interp+tign)
                     hrrpuas = np.append(np.array([0, 0]), hrrpua_interp)
+                    tests = '%s'%(material_database_filtered[material][thickness][flux][1]['FYI'])
                 
                 hrrpuas[hrrpuas < 0] = 0
                 
@@ -316,6 +321,7 @@ if __name__ == "__main__":
                     outHrrpua[outHrrpua < 0] = 0
                 material_database_filtered[material][thickness][flux]['time'] = outTime
                 material_database_filtered[material][thickness][flux]['hrrpua'] = outHrrpua
+                material_database_filtered[material][thickness][flux]['tests'] = tests
                 
                 d = pd.DataFrame(np.round(np.array([outTime, outHrrpua]).T, decimals=1), columns=['Time','HRRPUA'])
                 mat = '%s-%02dmm'%(material, thickness)
@@ -326,6 +332,7 @@ if __name__ == "__main__":
                     long_ind = np.argmax([len(t) for t in tmp])
                     tmp[long_ind] = tmp[long_ind][:-1]
                     mat_name = '_'.join(tmp)
+                material_database_filtered[material]['mat_name'] = mat_name
                 if mat in ignores: continue
                 dataFile = os.path.join(out_dir, mat_name+'-%0.0f.csv'%(flux))
                 d.to_csv(dataFile, index=False)
@@ -347,6 +354,7 @@ if __name__ == "__main__":
         thicknesses.remove('Density')
         thicknesses.remove('SootYield')
         thicknesses.remove('HeatOfCombustion')
+        thicknesses.remove('mat_name')
         for thickness in thicknesses:
             conductivity = 0.4 #material_database[material]['conductivity']
             specific_heat = 1. #material_database[material]['heatCapacity']
@@ -362,12 +370,14 @@ if __name__ == "__main__":
             mat = '%s-%02dmm'%(material, thickness)
             mat = mat.replace(',','_').replace(' ','_').replace('|','_')
             
-            mat_name = 'RISE_'+mat
-            while len(mat_name) > 40:
-                tmp = mat_name.split('_')
-                long_ind = np.argmax([len(t) for t in tmp])
-                tmp[long_ind] = tmp[long_ind][:-1]
-                mat_name = '_'.join(tmp)
+            mat_name = material_database_filtered[material]['mat_name']
+            
+            #mat_name = 'RISE_'+mat
+            #while len(mat_name) > 40:
+            #    tmp = mat_name.split('_')
+            #    long_ind = np.argmax([len(t) for t in tmp])
+            #    tmp[long_ind] = tmp[long_ind][:-1]
+            #    mat_name = '_'.join(tmp)
             
             if mat in ignores:
                 continue
@@ -385,8 +395,11 @@ if __name__ == "__main__":
                 refFlux = fluxes[ind]
             matClass = getMaterialClass(material)
             if matClass == 'Unknown': code = 's'
+            m = material.replace('%',' ').replace('-',' ').replace(',',' ')
+            while ('  ' in m): m = m.replace('  ',' ')
+            m = m + '-%0.4f'%(thickness)
             
-            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'RISE_Materials', mat_name, matClass, dataFiles, resultDir)
+            txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'RISE_Materials', m, matClass, dataFiles, resultDir)
             txt = txt + "%s,%s,%0.0f,%0.8f,%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(inputFileDir, out_dir_spec, refFlux, thickness, mat_name, refFlux, mat_name, refFlux)
             
             for flux in fluxes:
@@ -409,7 +422,9 @@ if __name__ == "__main__":
             for flux in fluxes:
                 txt = txt + '1|'
             txt = txt[:-1] + ','
-            txt = txt + 'RISE_materials'
+            for flux in fluxes:
+                txt = txt + '_'.join([x for x in sorted([x for x in material_database_filtered[material][thickness][flux]['tests'].split('|')])]) + '|'
+            txt = txt[:-1]
             
     with open(os.path.join(systemPath,'..','data','rise_spec_file.csv'), 'w') as f:
         f.write(txt)
