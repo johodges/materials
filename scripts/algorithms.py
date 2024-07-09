@@ -213,6 +213,11 @@ def buildFdsFile(chid, cases, properties, Tign, front_h,
         filtered_delta = [c for c,n in zip(all_deltas,all_names) if n != namespace]
         filtered_name = [c for c,n in zip(all_names,all_names) if n != namespace]
         
+        if len(filtered_flux) == 0:
+            filtered_flux = [c for c,n in zip(all_fluxes,all_names) ]
+            filtered_delta = [c for c,n in zip(all_deltas,all_names) ]
+            filtered_name = [c for c,n in zip(all_names,all_names) ]
+        
         if i%3 == 0: y = y + 0.1
         XYZ = [((i % 3))*0.1+0.05, y, 0.0]
         XB = [XYZ[0]-0.05, XYZ[0]+0.05, XYZ[1]-0.05, XYZ[1]+0.05, 0.0,0.0]

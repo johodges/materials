@@ -107,9 +107,10 @@ def importFsriMaterial(p, material, outInt, uniqueFluxes, filterWidth=11):
     material_dict['materialClass'] = getMaterialClass(material)
     coneData = getConeData(material, p)
     
-    #uniqueFluxes = np.unique(coneData['flux'].values)
+    uniqueFluxes = np.unique(coneData['flux'].values)
     fil = np.ones(filterWidth)/filterWidth
-    
+    #print(uniqueFluxes)
+    #print(np.unique(coneData['flux'].values))
     for flux in uniqueFluxes:
         outInt2 = outInt
         dt = np.min(coneData.loc[coneData['flux'] == flux, 'timeInt'].values)
@@ -313,14 +314,23 @@ if __name__ == "__main__":
     txt = txt + 'IgnitionTemperature,IgnitionTemperatureBasis,HeaderRows,FYI'
     fluxes = [25, 50, 75]
     for material in list(material_database.keys()):
+        ref_flux = 50
+        fluxes = list(material_database[material].keys())
+        fluxes.remove('conductivity')
+        fluxes.remove('heatCapacity')
+        fluxes.remove('density')
+        fluxes.remove('directory')
+        fluxes.remove('materialClass')
+        if ref_flux not in fluxes:
+            ref_flux = fluxes[np.argmin(abs(np.array(fluxes)-ref_flux))]
         conductivity = material_database[material]['conductivity']
         specific_heat = material_database[material]['heatCapacity']/1000
         density = material_database[material]['density']
-        thickness = material_database[material][50]['thickness']
-        heat_of_combustion = material_database[material][50]['HeatOfCombustion']
-        soot_yield = material_database[material][50]['SootYield']
-        initial_mass = material_database[material][50]['initial_mass']
-        final_mass = material_database[material][50]['final_mass']
+        thickness = material_database[material][ref_flux]['thickness']
+        heat_of_combustion = material_database[material][ref_flux]['HeatOfCombustion']
+        soot_yield = material_database[material][ref_flux]['SootYield']
+        initial_mass = material_database[material][ref_flux]['initial_mass']
+        final_mass = material_database[material][ref_flux]['final_mass']
         matClass = material_database[material]['materialClass']
         
         code ='d'
@@ -333,13 +343,46 @@ if __name__ == "__main__":
         dataFiles = dataFiles[:-1]
         
         txt = txt + "\n" + "%s,%s,%s,%s,%s,%s,%s,"%(code, number, 'FSRI_Materials', mat, matClass, dataFiles, resultDir)
-        txt = txt + "%s,%s,50,%0.8f,%s-50.csv-Time,%s-50.csv-HRRPUA,"%(inputFileDir, expFileDir, thickness, mat, mat)
-        txt = txt + '%s-25.csv-Time|%s-50.csv-Time|%s-75.csv-Time,'%(mat, mat, mat)
-        txt = txt + '%s-25.csv-HRRPUA|%s-50.csv-HRRPUA|%s-75.csv-HRRPUA,'%(mat, mat, mat)
-        txt = txt + '25|50|75,'
+        txt = txt + "%s,%s,%0.0f,%0.8f,"%(inputFileDir, expFileDir, ref_flux, thickness)
+        if len(fluxes) > 1:
+            txt = txt + "%s-%0.0f.csv-Time,%s-%0.0f.csv-HRRPUA,"%(mat, ref_flux, mat, ref_flux)
+        else:
+            txt = txt + "Time,HRRPUA,"
+        
+        
+        if len(fluxes) > 1:
+            txt = txt + '%s-%0.0f.csv-Time'%(mat, fluxes[0])
+            for flux in fluxes[1:]:
+                txt = txt + '|%s-%0.0f.csv-Time'%(mat, flux)
+            txt = txt +','
+        else:
+            txt = txt + 'Time,'
+        
+        if len(fluxes) > 1:
+            txt = txt + '%s-%0.0f.csv-HRRPUA'%(mat, fluxes[0])
+            for flux in fluxes[1:]:
+                txt = txt + '|%s-%0.0f.csv-HRRPUA'%(mat, flux)
+            txt = txt +','
+        else:
+            txt = txt + 'HRRPUA,'
+        txt = txt + '%0.0f'%(fluxes[0])
+        if len(fluxes) > 1:
+            for flux in fluxes[1:]:
+                txt = txt + '|%0.0f'%(flux)
+        txt = txt +','
         txt = txt + '%0.1f,%0.4f,%0.4f,%0.4f,%0.8f,'%(density, conductivity, specific_heat, emissivity, thickness)
         txt = txt + '%0.4f,%0.4f,%0.8f,'%(max([final_mass/initial_mass,0]), heat_of_combustion, soot_yield)
-        txt = txt + 'Calculate,25|50,1|1|1,FSRI_materials'
+        txt = txt + 'Calculate,'
+        txt = txt + '%0.0f'%(fluxes[0])
+        if len(fluxes) > 1:
+            for flux in fluxes[1:]:
+                txt = txt + '|%0.0f'%(flux)
+        txt = txt +','
+        txt = txt + '1'
+        if len(fluxes) > 1:
+            for flux in fluxes[1:]:
+                txt = txt + '|1'
+        txt = txt +',FSRI_materials'
         
         for flux in fluxes:
             tign = material_database[material][flux]['tIgn']
