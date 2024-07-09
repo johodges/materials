@@ -353,6 +353,7 @@ if __name__ == "__main__":
                 mat = '%s-%02dmm'%(material, thickness)
                 mat = mat.replace(',','_').replace(' ','_').replace('|','_').replace('%','')
                 mat_name = 'RISE_'+mat
+                
                 while len(mat_name) > 40:
                     tmp = mat_name.split('_')
                     long_ind = np.argmax([len(t) for t in tmp])
@@ -362,6 +363,7 @@ if __name__ == "__main__":
                 if mat in ignores: continue
                 dataFile = os.path.join(out_dir, mat_name+'-%0.0f.csv'%(flux))
                 d.to_csv(dataFile, index=False)
+                material_database_filtered[material][thickness]['mat_name'] = mat_name
     
     material_database = material_database_filtered
     resultDir = "../../../out/Scaling_Pyrolysis/"
@@ -396,7 +398,7 @@ if __name__ == "__main__":
             mat = '%s-%02dmm'%(material, thickness)
             mat = mat.replace(',','_').replace(' ','_').replace('|','_')
             
-            mat_name = material_database_filtered[material]['mat_name']
+            mat_name = material_database_filtered[material][thickness]['mat_name']
             
             #mat_name = 'RISE_'+mat
             #while len(mat_name) > 40:
