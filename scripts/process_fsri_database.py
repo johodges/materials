@@ -296,7 +296,7 @@ def findLimits(times, HRRs, energyCutoff1, energyCutoff2):
     return tign, times_trimmed, hrrs_trimmed
 
 if __name__ == "__main__":
-    ignores = ['Fiberglass_Insulation_R13_Paper_Faced','Fiberglass_Insulation_R30','Mineral_Wool_Insulation','Face_Shield','High_Temperature_SCBA_Facepiece','House_Wrap']
+    ignores = ['Fiberglass_Insulation_R13_Paper_Faced','Fiberglass_Insulation_R30','Mineral_Wool_Insulation','Face_Shield','High_Temperature_SCBA_Facepiece','House_Wrap','Pressure_Treated_Deck']
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','fsri_materials_processed')+os.sep
     dataout_dir = 'fsri_materials_processed' + os.sep
