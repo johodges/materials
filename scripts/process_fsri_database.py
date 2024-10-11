@@ -296,11 +296,11 @@ def findLimits(times, HRRs, energyCutoff1, energyCutoff2):
     return tign, times_trimmed, hrrs_trimmed
 
 if __name__ == "__main__":
-    
+    ignores = ['Fiberglass_Insulation_R13_Paper_Faced','Fiberglass_Insulation_R30','Mineral_Wool_Insulation','Face_Shield','High_Temperature_SCBA_Facepiece','House_Wrap']
     systemPath = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(systemPath,'..','data','fsri_materials_processed')+os.sep
     dataout_dir = 'fsri_materials_processed' + os.sep
-    material_database = importFsriDatabase(data_dir, 15)
+    material_database = importFsriDatabase(data_dir, 15, ignores=ignores)
     
     resultDir = data_dir
     inputFileDir = data_dir
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         density = material_database[material]['density']
         thickness = material_database[material][ref_flux]['thickness']
         heat_of_combustion = material_database[material][ref_flux]['HeatOfCombustion']
-        soot_yield = material_database[material][ref_flux]['SootYield']
+        soot_yield = max([material_database[material][ref_flux]['SootYield'],0.001])
         initial_mass = material_database[material][ref_flux]['initial_mass']
         final_mass = material_database[material][ref_flux]['final_mass']
         matClass = material_database[material]['materialClass']
